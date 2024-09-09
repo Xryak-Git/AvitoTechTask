@@ -1,5 +1,5 @@
 env: "local"
-storage_path: ./storage/storage.db
+storage_url: "postgres://postgres:postgres@192.168.1.201:5432/postgres"
 log_level: "debug"
 http_server:
   adress: "localhost"

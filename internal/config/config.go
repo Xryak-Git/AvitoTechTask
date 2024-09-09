@@ -8,10 +8,10 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env"  envDefault:"development"`
-	StoragePath string `yaml:"storage_path" env-requierd:"true"`
-	LogLevel    string `yaml:"log_level" env-default:"debug"`
-	HTTPServer  `yaml:"http_server"`
+	Env        string `yaml:"env"  envDefault:"development"`
+	StorageURL string `yaml:"storage_url" env-requierd:"true"`
+	LogLevel   string `yaml:"log_level" env-default:"debug"`
+	HTTPServer `yaml:"http_server"`
 }
 
 type HTTPServer struct {

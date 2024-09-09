@@ -2,7 +2,7 @@ package main
 
 import (
 	"avitoTech/internal/config"
-	"avitoTech/internal/storage/sqlite"
+	"avitoTech/internal/storage/postgres"
 	"log/slog"
 	"os"
 )
@@ -13,7 +13,7 @@ func main() {
 	log := setupLogger(cfg.LogLevel)
 	log.Info("config loaded", slog.String("log level", cfg.LogLevel))
 
-	storage, err := sqlite.New(cfg.StoragePath)
+	storage, err := postgres.New(cfg.StorageURL)
 	if err != nil {
 		log.Error("cannot init storage", err)
 		os.Exit(1)
