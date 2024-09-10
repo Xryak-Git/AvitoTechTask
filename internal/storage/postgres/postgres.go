@@ -1,15 +1,11 @@
 package postgres
 
 import (
-	"avitoTech/internal/entity"
-	"avitoTech/internal/storage"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	log "log/slog"
 	"time"
 )
 
@@ -95,42 +91,4 @@ func (p *Postgres) Ping() error {
 		return err
 	}
 	return nil
-}
-
-func (p *Postgres) TendersNew(ctx context.Context, name, description, serviceType, status string, organizationId int) (int, error) {
-	const fn = "storage.postgres.TendersNew"
-
-	sql := `
-	INSERT INTO tender (name, description, service_type, status, organization_id)
-	VALUES ($1, $2, $3::service_type, $4::tender_status, $5) 
-	RETURNING id, name, description, service_type, status, organization_id, version, created_at
-	`
-
-	var t entity.Tender
-	err := p.Pool.QueryRow(ctx, sql, name, description, serviceType, status, organizationId).Scan(
-		&t.Id,
-		&t.Name,
-		&t.Description,
-		&t.ServiceType,
-		&t.Status,
-		&t.OrganizationId,
-		&t.Version,
-		&t.CreatedAt,
-	)
-
-	if err != nil {
-		log.Info("err: %v", err)
-		var pgErr *pgconn.PgError
-		if ok := errors.As(err, &pgErr); ok {
-			if pgErr.Code == "23505" {
-				return 0, storage.ErrAlreadyExists
-			}
-		}
-		return 0, fmt.Errorf("AccountRepo.CreateAccount - r.Pool.QueryRow: %v", err)
-	}
-
-	log.Info("New tender: ", "tender", t)
-
-	return t.Id, nil
-
 }

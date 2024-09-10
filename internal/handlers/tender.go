@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"avitoTech/internal/storage/postgres"
+	"avitoTech/internal/repo"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 )
 
-type CreateTender struct {
+type createTenderInput struct {
 	Name            string `json:"name" validate:"required,min=3"`
 	Description     string `json:"description" validate:"required"`
 	ServiceType     string `json:"serviceType" validate:"required"`
@@ -17,7 +17,7 @@ type CreateTender struct {
 	CreatorUsername string `json:"creatorUsername" validate:"required"`
 }
 
-func TenderNew(pg *postgres.Postgres) http.HandlerFunc {
+func CreateTender(repo *repo.Repositories) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Чтение тела запроса
 		body, err := io.ReadAll(r.Body)
@@ -27,7 +27,7 @@ func TenderNew(pg *postgres.Postgres) http.HandlerFunc {
 		}
 
 		// Создаем объект Tender
-		var t CreateTender
+		var t createTenderInput
 
 		// Парсим JSON в структуру Tender
 		err = json.Unmarshal(body, &t)
@@ -36,7 +36,7 @@ func TenderNew(pg *postgres.Postgres) http.HandlerFunc {
 			return
 		}
 
-		id, err := pg.TendersNew(r.Context(), t.Name, t.Description, t.ServiceType, t.Status, t.OrganizationId)
+		id, err := repo.Tender.New(r.Context(), t.Name, t.Description, t.ServiceType, t.Status, t.OrganizationId)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)

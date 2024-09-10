@@ -4,6 +4,7 @@ import (
 	"avitoTech/internal/app"
 	"avitoTech/internal/config"
 	"avitoTech/internal/handlers"
+	"avitoTech/internal/repo"
 	"avitoTech/internal/storage/postgres"
 	"net/http"
 	"os"
@@ -22,8 +23,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	repositories := repo.NewRepos(storage)
+
 	m := http.NewServeMux()
-	m.Handle("POST /tender/new", handlers.TenderNew(storage))
+	m.Handle("POST /tender/new", handlers.CreateTender(repositories))
 	http.ListenAndServe(":7777", m)
 
 	//_ = storage
