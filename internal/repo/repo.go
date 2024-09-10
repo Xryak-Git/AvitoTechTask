@@ -1,25 +1,39 @@
 package repo
 
 import (
+	"avitoTech/internal/entity"
 	"avitoTech/internal/repo/pgrepo"
 	"avitoTech/internal/storage/postgres"
 	"context"
 )
 
 type Tender interface {
-	New(ctx context.Context, name, description, serviceType, status string, organizationId int) (int, error)
+	New(ctx context.Context, name, description, serviceType, status, organizationId string) (string, error)
 }
 
 type Bid interface {
 } // TODO: Add interfaces
 
+type User interface {
+	GetByName(ctx context.Context, username string) (entity.User, error)
+}
+
+type Responsible interface {
+	GetAllResponsiblesByUserId(ctx context.Context, userId string) ([]entity.Responsible, error)
+	IsUserResponsibleForOrganization(ctx context.Context, userId, organizationId string) (bool, error)
+}
+
 type Repositories struct {
 	Tender
 	Bid
+	User
+	Responsible
 }
 
 func NewRepos(pg *postgres.Postgres) *Repositories {
 	return &Repositories{
-		Tender: pgrepo.NewTenderRepo(pg),
+		Tender:      pgrepo.NewTenderRepo(pg),
+		User:        pgrepo.NewUserRepo(pg),
+		Responsible: pgrepo.NewResponsibleRepo(pg),
 	}
 }

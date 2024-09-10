@@ -51,7 +51,7 @@ func New(url string, opts ...Option) (*Postgres, error) {
 
 	poolConfig, err := pgxpool.ParseConfig(url)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 
 	poolConfig.MaxConns = int32(pg.maxPoolSize)
@@ -67,13 +67,13 @@ func New(url string, opts ...Option) (*Postgres, error) {
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 
 	err = pg.Ping()
 
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", err)
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return pg, nil

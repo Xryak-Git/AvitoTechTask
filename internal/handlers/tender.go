@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type createTenderInput struct {
@@ -13,7 +14,7 @@ type createTenderInput struct {
 	Description     string `json:"description" validate:"required"`
 	ServiceType     string `json:"serviceType" validate:"required"`
 	Status          string `json:"status" validate:"required"`
-	OrganizationId  int    `json:"organizationId" validate:"required"`
+	OrganizationId  string `json:"organizationId" validate:"required"`
 	CreatorUsername string `json:"creatorUsername" validate:"required"`
 }
 
@@ -36,7 +37,32 @@ func CreateTender(repo *repo.Repositories) http.HandlerFunc {
 			return
 		}
 
-		id, err := repo.Tender.New(r.Context(), t.Name, t.Description, t.ServiceType, t.Status, t.OrganizationId)
+		u, err := repo.User.GetByName(r.Context(), t.CreatorUsername)
+
+		//TODO: Добавить ошибку не существования пользователя
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		isResponsible, err := repo.Responsible.IsUserResponsibleForOrganization(r.Context(), u.Id, t.OrganizationId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		//TODO: Добавить ошибку отсутствие прав для пользователя за организацию
+		if isResponsible == false {
+			http.Error(w, ErrUserIsNotResposible, http.StatusBadRequest)
+			return
+		}
+
+		id, err := repo.Tender.New(r.Context(),
+			t.Name,
+			t.Description,
+			strings.ToUpper(t.ServiceType),
+			strings.ToUpper(t.Status),
+			t.OrganizationId)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
