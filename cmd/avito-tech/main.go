@@ -1,17 +1,20 @@
 package main
 
 import (
+	"avitoTech/internal/app"
 	"avitoTech/internal/config"
+	"avitoTech/internal/handlers"
 	"avitoTech/internal/storage/postgres"
-	"log/slog"
+	"net/http"
 	"os"
 )
 
 func main() {
 	cfg := config.MustLoad()
 
-	log := setupLogger(cfg.LogLevel)
-	log.Info("config loaded", slog.String("log level", cfg.LogLevel))
+	log := app.SetupLogger(cfg.LogLevel)
+
+	log.Info("config loaded", "log level", cfg.LogLevel)
 
 	storage, err := postgres.New(cfg.StorageURL)
 	if err != nil {
@@ -19,23 +22,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	_ = storage
-}
+	m := http.NewServeMux()
+	m.Handle("POST /tender/new", handlers.TenderNew(storage))
+	http.ListenAndServe(":7777", m)
 
-func setupLogger(level string) *slog.Logger {
-	logLevel, err := parseLevel(level)
-	if err != nil {
-		logLevel = slog.LevelDebug
-	}
-	log := slog.New(
-		slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}),
-	)
-
-	return log
-}
-
-func parseLevel(s string) (slog.Level, error) {
-	var level slog.Level
-	var err = level.UnmarshalText([]byte(s))
-	return level, err
+	//_ = storage
 }
