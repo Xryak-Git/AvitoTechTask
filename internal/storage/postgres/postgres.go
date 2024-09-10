@@ -92,3 +92,22 @@ func (p *Postgres) Ping() error {
 	}
 	return nil
 }
+
+func (p Postgres) TendersNew(ctx context.Context, name, description, serviceType, status string, organizationId int, creatorUsername string) (int, error) {
+	const fn = "storage.postgres.TendersNew"
+
+	sql := `
+	INSERT INTO tender (name, description, service_type, status, organization_id)
+	VALUES ($1, $2, $3::service_type, $4::tender_status, 1)
+	`
+
+	var id int
+	err := p.Pool.QueryRow(ctx, sql).Scan(&id)
+
+	if err != nil {
+		return 0, fmt.Errorf("ProductRepo.CreateProduct - r.Pool.QueryRow: %v", err)
+	}
+
+	return id, nil
+
+}
