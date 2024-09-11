@@ -2,7 +2,7 @@ package pgrepo
 
 import (
 	"avitoTech/internal/entity"
-	"avitoTech/internal/repo"
+	"avitoTech/internal/repo/repoerrs"
 	"avitoTech/internal/storage/postgres"
 	"context"
 	"errors"
@@ -39,7 +39,7 @@ func (r *UserRepo) GetByName(ctx context.Context, username string) (entity.User,
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return entity.User{}, repo.ErrNotFound
+			return entity.User{}, repoerrs.ErrNotFound
 		}
 		return entity.User{}, fmt.Errorf("%s: %v", fn, err)
 	}

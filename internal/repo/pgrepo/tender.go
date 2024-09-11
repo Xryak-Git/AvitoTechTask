@@ -2,7 +2,7 @@ package pgrepo
 
 import (
 	"avitoTech/internal/entity"
-	"avitoTech/internal/repo"
+	"avitoTech/internal/repo/repoerrs"
 	"avitoTech/internal/storage/postgres"
 	"context"
 	"errors"
@@ -45,7 +45,7 @@ func (r *TenderRepo) New(ctx context.Context, name, description, serviceType, st
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok {
 			if pgErr.Code == "23505" {
-				return "", repo.ErrAlreadyExists
+				return "", repoerrs.ErrAlreadyExists
 			}
 		}
 		return "", fmt.Errorf("%s: %v", fn, err)
