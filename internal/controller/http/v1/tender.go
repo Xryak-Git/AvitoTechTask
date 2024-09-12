@@ -17,7 +17,19 @@ func newTenderRoutes(r chi.Router, tenderService service.Tender) {
 		tenderService: tenderService,
 	}
 
+	r.Get("/", routes.getTenders)
+
 	r.Post("/new", routes.createTender)
+
+	r.Get("/my", routes.getUserTenders)
+	r.Get("/{tenderId}/status", routes.getTenderStatus)
+
+	r.Put("/{tendersId}/status", routes.updateTenderStatus)
+
+	r.Patch("/{tenderId}/edit", routes.editTender)
+
+	r.Put("/{tenderId}/rollback/{version}", routes.rollbackTender)
+
 }
 
 func (tr *tenderRoutes) createTender(w http.ResponseWriter, r *http.Request) {
@@ -48,4 +60,28 @@ func (tr *tenderRoutes) createTender(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tender)
 
+}
+
+func (tr *tenderRoutes) getTenders(w http.ResponseWriter, r *http.Request) {
+	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+}
+
+func (tr *tenderRoutes) getUserTenders(w http.ResponseWriter, r *http.Request) {
+	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+}
+
+func (tr *tenderRoutes) editTender(w http.ResponseWriter, r *http.Request) {
+	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+}
+
+func (tr *tenderRoutes) rollbackTender(w http.ResponseWriter, r *http.Request) {
+	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+}
+
+func (tr *tenderRoutes) getTenderStatus(w http.ResponseWriter, r *http.Request) {
+	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+}
+
+func (tr *tenderRoutes) updateTenderStatus(w http.ResponseWriter, r *http.Request) {
+	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }

@@ -32,5 +32,4 @@ func main() {
 
 	http.ListenAndServe(":8080", r)
 
-	//_ = storage
 }

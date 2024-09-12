@@ -24,8 +24,12 @@ type Tender interface {
 	CreateTender(input CreateTenderInput) (entity.Tender, error)
 }
 
+type Bid interface {
+}
+
 type Services struct {
 	Tender Tender
+	Bid    Bid
 }
 
 func NewServices(r *repo.Repositories) *Services {

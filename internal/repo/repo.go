@@ -12,7 +12,7 @@ type Tender interface {
 }
 
 type Bid interface {
-} // TODO: Add interfaces
+}
 
 type User interface {
 	GetByName(ctx context.Context, username string) (entity.User, error)
