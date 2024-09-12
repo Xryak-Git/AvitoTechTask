@@ -26,7 +26,8 @@ func main() {
 	repositories := repo.NewRepos(storage)
 
 	m := http.NewServeMux()
-	m.Handle("POST /tender/new", handlers.CreateTender(repositories))
+	m.Handle("POST /api/tenders/new", handlers.CreateTender(repositories))
+	m.Handle("GET /api/tenders", handlers.GetTenders(repositories))
 	http.ListenAndServe(":8080", m)
 
 	//_ = storage
