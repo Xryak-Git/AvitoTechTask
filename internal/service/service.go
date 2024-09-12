@@ -3,7 +3,6 @@ package service
 import (
 	"avitoTech/internal/entity"
 	"avitoTech/internal/repo"
-	"strings"
 )
 
 type CreateTenderInput struct {
@@ -15,20 +14,25 @@ type CreateTenderInput struct {
 	CreatorUsername string `json:"creatorUsername" validate:"required"`
 }
 
-func (t *CreateTenderInput) toUpper() {
-	t.ServiceType = strings.ToUpper(t.ServiceType)
-	t.Status = strings.ToUpper(t.Status)
+type GetParams struct {
+	Limit  int `schema:"limit"`
+	Offset int `schema:"offset"`
 }
 
 type GetTendersParams struct {
-	Limit       int      `schema:"limit"`
-	Offset      int      `schema:"offset"`
+	GetParams
 	ServiceType []string `schema:"service_type"`
+}
+
+type GetUserTendersParams struct {
+	GetParams
+	Username string `schema:"username"`
 }
 
 type Tender interface {
 	CreateTender(input CreateTenderInput) (entity.Tender, error)
 	GetTenders(gtp GetTendersParams) ([]entity.Tender, error)
+	GetUserTenders(gtp GetUserTendersParams) ([]entity.Tender, error)
 }
 
 type Bid interface {

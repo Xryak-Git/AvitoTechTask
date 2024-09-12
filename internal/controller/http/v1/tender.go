@@ -92,7 +92,37 @@ func (tr *tenderRoutes) getTenders(w http.ResponseWriter, r *http.Request) {
 }
 
 func (tr *tenderRoutes) getUserTenders(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid params", http.StatusBadRequest)
+		return
+	}
+
+	gutp := new(service.GetUserTendersParams)
+	if err := schema.NewDecoder().Decode(gutp, r.Form); err != nil {
+		http.Error(w, "invalid params", http.StatusInternalServerError)
+		return
+	}
+
+	tenders, err := tr.tenderService.GetUserTenders(*gutp)
+
+	if err != nil {
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, "user not exists", http.StatusUnauthorized)
+			return
+		}
+		log.Debug("err: %v", err.Error())
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
+
+	if len(tenders) == 0 {
+		ErrorResponse(w, "tenders not found", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tenders)
+
 }
 
 func (tr *tenderRoutes) editTender(w http.ResponseWriter, r *http.Request) {

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	log "log/slog"
 )
 
 type UserRepo struct {
@@ -38,6 +39,7 @@ func (r *UserRepo) GetByName(ctx context.Context, username string) (entity.User,
 	)
 
 	if err != nil {
+		log.Error("Error", "fn:", fn, "err:", err.Error())
 		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.User{}, repoerrs.ErrNotFound
 		}

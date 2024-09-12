@@ -66,6 +66,18 @@ func (s *TenderService) GetTenders(gtp GetTendersParams) ([]entity.Tender, error
 	return tenders, nil
 }
 
+func (s *TenderService) GetUserTenders(gtp GetUserTendersParams) ([]entity.Tender, error) {
+	_, err := s.userRepo.GetByName(context.Background(), gtp.Username)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return []entity.Tender{}, ErrUserNotExists
+		}
+		return []entity.Tender{}, err
+	}
+
+	return s.tenderRepo.GetUserTenders(context.Background(), gtp.Username, gtp.Limit, gtp.Offset)
+}
+
 //// Получить тендеры пользователя
 //// (GET /tenders/my)
 //GetUserTenders(w http.ResponseWriter, r *http.Request, params GetUserTendersParams)
