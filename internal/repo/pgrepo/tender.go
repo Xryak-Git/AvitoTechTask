@@ -19,8 +19,8 @@ func NewTenderRepo(pg *postgres.Postgres) *TenderRepo {
 	return &TenderRepo{pg}
 }
 
-func (r *TenderRepo) New(ctx context.Context, name, description, serviceType, status, organizationId string) (string, error) {
-	const fn = "repo.pgrepo.tender.New"
+func (r *TenderRepo) CreateTender(ctx context.Context, name, description, serviceType, status, organizationId string) (entity.Tender, error) {
+	const fn = "repo.pgrepo.tender.CreateTender"
 
 	sql := `
 	INSERT INTO tender (name, description, service_type, status, organization_id)
@@ -45,14 +45,14 @@ func (r *TenderRepo) New(ctx context.Context, name, description, serviceType, st
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok {
 			if pgErr.Code == "23505" {
-				return "", repoerrs.ErrAlreadyExists
+				return t, repoerrs.ErrAlreadyExists
 			}
 		}
-		return "", fmt.Errorf("%s: %v", fn, err)
+		return t, fmt.Errorf("%s: %v", fn, err)
 	}
 
-	log.Info("New tender: ", "tender", t)
+	log.Info("CreateTender tender: ", "tender", t)
 
-	return t.Id, nil
+	return t, nil
 
 }

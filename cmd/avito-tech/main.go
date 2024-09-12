@@ -3,8 +3,9 @@ package main
 import (
 	"avitoTech/internal/app"
 	"avitoTech/internal/config"
-	"avitoTech/internal/handlers"
+	v1 "avitoTech/internal/controller/http/v1"
 	"avitoTech/internal/repo"
+	"avitoTech/internal/service"
 	"avitoTech/internal/storage/postgres"
 	"net/http"
 	"os"
@@ -24,11 +25,12 @@ func main() {
 	}
 
 	repositories := repo.NewRepos(storage)
+	services := service.NewServices(repositories)
 
-	m := http.NewServeMux()
-	m.Handle("POST /api/tenders/new", handlers.CreateTender(repositories))
-	m.Handle("GET /api/tenders", handlers.GetTenders(repositories))
-	http.ListenAndServe(":8080", m)
+	log.Info("Initializing handlers and routes...")
+	r := v1.NewRouter(services)
+
+	http.ListenAndServe(":8080", r)
 
 	//_ = storage
 }

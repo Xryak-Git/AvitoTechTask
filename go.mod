@@ -4,6 +4,7 @@ go 1.23.0
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
+	github.com/go-chi/chi/v5 v5.1.0 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/ilyakaznacheev/cleanenv v1.5.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

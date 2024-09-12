@@ -2,9 +2,12 @@ package pgrepo
 
 import (
 	"avitoTech/internal/entity"
+	"avitoTech/internal/repo/repoerrs"
 	"avitoTech/internal/storage/postgres"
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 )
 
 type ResponsibleRepo struct {
@@ -27,7 +30,10 @@ func (r *ResponsibleRepo) GetAllResponsiblesByUserId(ctx context.Context, userId
 	rows, err := r.Pool.Query(ctx, sql, userId)
 
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", fn, err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return []entity.Responsible{}, repoerrs.ErrNotFound
+		}
+		return []entity.Responsible{}, fmt.Errorf("%s: %v", fn, err)
 	}
 
 	defer rows.Close()
@@ -41,7 +47,7 @@ func (r *ResponsibleRepo) GetAllResponsiblesByUserId(ctx context.Context, userId
 			&responsible.UserId,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %v", err)
+			return []entity.Responsible{}, fmt.Errorf("%s: %v", err)
 		}
 		responsibles = append(responsibles, responsible)
 	}
@@ -55,6 +61,9 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganization(ctx context.Context, 
 	responsibles, err := r.GetAllResponsiblesByUserId(ctx, userId)
 
 	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return false, nil
+		}
 		return false, fmt.Errorf("%s: %v", fn, err)
 	}
 

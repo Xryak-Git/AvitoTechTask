@@ -37,7 +37,7 @@ type Postgres struct {
 }
 
 func New(url string, opts ...Option) (*Postgres, error) {
-	const fn = "storage.postgres.New"
+	const fn = "storage.postgres.CreateTender"
 
 	pg := &Postgres{
 		maxPoolSize:  defaultMaxPoolSize,

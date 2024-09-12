@@ -8,7 +8,7 @@ import (
 )
 
 type Tender interface {
-	New(ctx context.Context, name, description, serviceType, status, organizationId string) (string, error)
+	CreateTender(ctx context.Context, name, description, serviceType, status, organizationId string) (entity.Tender, error)
 }
 
 type Bid interface {
