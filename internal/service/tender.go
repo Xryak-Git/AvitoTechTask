@@ -5,9 +5,7 @@ import (
 	"avitoTech/internal/repo"
 	"avitoTech/internal/repo/repoerrs"
 	"context"
-	"fmt"
-	"github.com/gorilla/schema"
-	"net/http"
+	"strings"
 )
 
 type TenderService struct {
@@ -25,8 +23,6 @@ func NewTenderService(tenderRepo repo.Tender, userRepo repo.User, responsibleRep
 }
 
 func (s *TenderService) CreateTender(ct CreateTenderInput) (entity.Tender, error) {
-	ct.toUpper()
-
 	u, err := s.userRepo.GetByName(context.Background(), ct.CreatorUsername)
 
 	if err != nil {
@@ -49,31 +45,25 @@ func (s *TenderService) CreateTender(ct CreateTenderInput) (entity.Tender, error
 	}
 
 	t, err := s.tenderRepo.CreateTender(context.Background(), ct.Name, ct.Description, ct.ServiceType, ct.Status, ct.OrganizationId)
-	t.Capitalize()
 
 	return t, err
 }
 
-type GetTendersParams struct {
-	Limit       int      `schema:"limit"`
-	Offset      int      `schema:"offset"`
-	ServiceType []string `schema:"service_type"`
-}
-
-func GetTenders(repo *repo.Repositories) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Не удалост", http.StatusBadGateway)
-		}
-
-		// Создаем объект Tender
-		params := new(GetTendersParams)
-		if err := schema.NewDecoder().Decode(params, r.Form); err != nil {
-			http.Error(w, "Не удалост", http.StatusBadGateway)
-		}
-		fmt.Println(params)
+func (s *TenderService) GetTenders(gtp GetTendersParams) ([]entity.Tender, error) {
+	for i, st := range gtp.ServiceType {
+		gtp.ServiceType[i] = strings.ToUpper(st)
 	}
+
+	tenders, err := s.tenderRepo.GetTenders(context.Background(), gtp.Limit, gtp.Offset, gtp.ServiceType)
+
+	if err != nil {
+		if err == repoerrs.ErrNotExists {
+			return []entity.Tender{}, ErrTendersNotFound
+		}
+		return []entity.Tender{}, err
+	}
+
+	return tenders, nil
 }
 
 //// Получить тендеры пользователя

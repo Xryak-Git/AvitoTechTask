@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	log "log/slog"
 )
@@ -24,8 +25,8 @@ func (r *TenderRepo) CreateTender(ctx context.Context, name, description, servic
 
 	sql := `
 	INSERT INTO tender (name, description, service_type, status, organization_id)
-	VALUES ($1, $2, $3::service_type, $4::tender_status, $5) 
-	RETURNING id, name, description, service_type, status, organization_id, version, created_at
+	VALUES ($1, $2, UPPER($3)::service_type, UPPER($4)::tender_status, $5) 
+	RETURNING id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at
 	`
 
 	var t entity.Tender
@@ -51,8 +52,55 @@ func (r *TenderRepo) CreateTender(ctx context.Context, name, description, servic
 		return t, fmt.Errorf("%s: %v", fn, err)
 	}
 
-	log.Info("CreateTender tender: ", "tender", t)
+	log.Debug("CreateTender tender: ", "tender", t)
 
 	return t, nil
 
+}
+
+func (r *TenderRepo) GetTenders(ctx context.Context, limit, offset int, serviceType []string) ([]entity.Tender, error) {
+	const fn = "repo.pgrepo.tender.GetTenders"
+
+	sql := `
+	SELECT id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at
+	FROM tender
+	WHERE service_type::text = ANY($1)
+	LIMIT $2
+	OFFSET $3
+	`
+
+	rows, err := r.Pool.Query(ctx, sql, serviceType, limit, offset)
+
+	if err != nil {
+		log.Debug("err: ", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return []entity.Tender{}, repoerrs.ErrNotFound
+		}
+		return []entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	defer rows.Close()
+
+	var tenders []entity.Tender
+	for rows.Next() {
+		var t entity.Tender
+		err := rows.Scan(
+			&t.Id,
+			&t.Name,
+			&t.Description,
+			&t.ServiceType,
+			&t.Status,
+			&t.OrganizationId,
+			&t.Version,
+			&t.CreatedAt,
+		)
+		if err != nil {
+			return []entity.Tender{}, fmt.Errorf("%s: %v", err)
+		}
+		tenders = append(tenders, t)
+	}
+
+	log.Debug("GetTenders: ", tenders)
+
+	return tenders, nil
 }

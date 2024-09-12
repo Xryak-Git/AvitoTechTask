@@ -4,7 +4,9 @@ import (
 	"avitoTech/internal/service"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/schema"
 	"io"
+	log "log/slog"
 	"net/http"
 )
 
@@ -53,17 +55,40 @@ func (tr *tenderRoutes) createTender(w http.ResponseWriter, r *http.Request) {
 			ErrorResponse(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		log.Debug("err: ", err.Error())
 		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tender)
-
 }
 
 func (tr *tenderRoutes) getTenders(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid params", http.StatusBadRequest)
+		return
+	}
+
+	gtp := new(service.GetTendersParams)
+	if err := schema.NewDecoder().Decode(gtp, r.Form); err != nil {
+		http.Error(w, "invalid params", http.StatusInternalServerError)
+		return
+	}
+
+	tenders, err := tr.tenderService.GetTenders(*gtp)
+
+	if err != nil {
+		if err == service.ErrTendersNotFound {
+			ErrorResponse(w, "tenders not found", http.StatusBadRequest)
+			return
+		}
+		log.Debug("err: %v", err.Error())
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tenders)
 }
 
 func (tr *tenderRoutes) getUserTenders(w http.ResponseWriter, r *http.Request) {

@@ -20,8 +20,15 @@ func (t *CreateTenderInput) toUpper() {
 	t.Status = strings.ToUpper(t.Status)
 }
 
+type GetTendersParams struct {
+	Limit       int      `schema:"limit"`
+	Offset      int      `schema:"offset"`
+	ServiceType []string `schema:"service_type"`
+}
+
 type Tender interface {
 	CreateTender(input CreateTenderInput) (entity.Tender, error)
+	GetTenders(gtp GetTendersParams) ([]entity.Tender, error)
 }
 
 type Bid interface {
