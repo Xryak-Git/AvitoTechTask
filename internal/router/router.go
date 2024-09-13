@@ -1,7 +1,7 @@
 package router
 
 import (
-	"avitoTech/internal/controller/http/v1"
+	"avitoTech/internal/controller"
 	"avitoTech/internal/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,8 +12,8 @@ func NewRouter(services *service.Services) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	bc := v1.NewBidController(services.Bid)
-	tc := v1.NewTenderController(services.Tender)
+	bc := controller.NewBidController(services.Bid)
+	tc := controller.NewTenderController(services.Tender)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
