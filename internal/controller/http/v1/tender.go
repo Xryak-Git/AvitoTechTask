@@ -3,38 +3,23 @@ package v1
 import (
 	"avitoTech/internal/service"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/schema"
 	"io"
 	log "log/slog"
 	"net/http"
 )
 
-type tenderRoutes struct {
+type TenderController struct {
 	tenderService service.Tender
 }
 
-func newTenderRoutes(r chi.Router, tenderService service.Tender) {
-	routes := &tenderRoutes{
+func NewTenderController(tenderService service.Tender) TenderController {
+	return TenderController{
 		tenderService: tenderService,
 	}
-
-	r.Get("/", routes.getTenders)
-
-	r.Post("/new", routes.createTender)
-
-	r.Get("/my", routes.getUserTenders)
-	r.Get("/{tenderId}/status", routes.getTenderStatus)
-
-	r.Put("/{tendersId}/status", routes.updateTenderStatus)
-
-	r.Patch("/{tenderId}/edit", routes.editTender)
-
-	r.Put("/{tenderId}/rollback/{version}", routes.rollbackTender)
-
 }
 
-func (tr *tenderRoutes) createTender(w http.ResponseWriter, r *http.Request) {
+func (tr *TenderController) CreateTender(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		ErrorResponse(w, "invalid request body", http.StatusBadRequest)
@@ -64,7 +49,7 @@ func (tr *tenderRoutes) createTender(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tender)
 }
 
-func (tr *tenderRoutes) getTenders(w http.ResponseWriter, r *http.Request) {
+func (tr *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid params", http.StatusBadRequest)
 		return
@@ -91,7 +76,7 @@ func (tr *tenderRoutes) getTenders(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tenders)
 }
 
-func (tr *tenderRoutes) getUserTenders(w http.ResponseWriter, r *http.Request) {
+func (tr *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid params", http.StatusBadRequest)
 		return
@@ -125,18 +110,18 @@ func (tr *tenderRoutes) getUserTenders(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (tr *tenderRoutes) editTender(w http.ResponseWriter, r *http.Request) {
+func (tr *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 
-func (tr *tenderRoutes) rollbackTender(w http.ResponseWriter, r *http.Request) {
+func (tr *TenderController) RollbackTender(w http.ResponseWriter, r *http.Request) {
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 
-func (tr *tenderRoutes) getTenderStatus(w http.ResponseWriter, r *http.Request) {
+func (tr *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Request) {
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 
-func (tr *tenderRoutes) updateTenderStatus(w http.ResponseWriter, r *http.Request) {
+func (tr *TenderController) UpdateTenderStatus(w http.ResponseWriter, r *http.Request) {
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }

@@ -3,8 +3,8 @@ package main
 import (
 	"avitoTech/internal/app"
 	"avitoTech/internal/config"
-	v1 "avitoTech/internal/controller/http/v1"
 	"avitoTech/internal/repo"
+	"avitoTech/internal/router"
 	"avitoTech/internal/service"
 	"avitoTech/internal/storage/postgres"
 	"net/http"
@@ -28,7 +28,7 @@ func main() {
 	services := service.NewServices(repositories)
 
 	log.Info("Initializing handlers and routes...")
-	r := v1.NewRouter(services)
+	r := router.NewRouter(services)
 
 	http.ListenAndServe(":8080", r)
 
