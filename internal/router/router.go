@@ -32,7 +32,7 @@ func NewRouter(services *service.Services) chi.Router {
 			r.Get("/my", tc.GetUserTenders)
 			r.Get("/{tenderId}/status", tc.GetTenderStatus)
 
-			r.Put("/{tendersId}/status", tc.UpdateTenderStatus)
+			r.Put("/{tenderId}/status", tc.UpdateTenderStatus)
 
 			r.Patch("/{tenderId}/edit", tc.EditTender)
 

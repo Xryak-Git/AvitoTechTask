@@ -99,7 +99,7 @@ func (tr *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Reques
 
 func (tr *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Request) {
 
-	gtsp, err := DecodeFormParams[service.GetTenderStatusParams](r)
+	u, err := DecodeFormParams[service.UserParam](r)
 	if err != nil {
 		HandleRequestError(w, err)
 		return
@@ -107,7 +107,7 @@ func (tr *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Reque
 
 	tenderId := chi.URLParam(r, "tenderId")
 
-	status, err := tr.tenderService.GetTenderStatus(*gtsp, tenderId)
+	status, err := tr.tenderService.GetTenderStatus(*u, tenderId)
 
 	if err != nil {
 		if err == service.ErrTenderNotFound || err == service.ErrUserNotExists {
@@ -123,13 +123,62 @@ func (tr *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Reque
 }
 
 func (tr *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	//TODO: implement me fully
+	u, err := DecodeFormParams[service.UserParam](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	pt, err := ParseJSONBody[service.PatchTenderInput](r, w)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	tenderId := chi.URLParam(r, "tenderId")
+
+	tender, err := tr.tenderService.PathTender(*u, tenderId, *pt)
+
+	if err != nil {
+		if err == service.ErrUserNotExists || err == service.ErrTenderNotFound {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		log.Debug("err: %v", err.Error())
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
+
+	SendJSONResponse(w, tender)
+
 }
 
 func (tr *TenderController) RollbackTender(w http.ResponseWriter, r *http.Request) {
+	//TODO: implement me
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 
 func (tr *TenderController) UpdateTenderStatus(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	utsp, err := DecodeFormParams[service.UpdateTenderStatusParams](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	tenderId := chi.URLParam(r, "tenderId")
+
+	tender, err := tr.tenderService.UpdateTenderStatus(*utsp, tenderId)
+
+	if err != nil {
+		if err == service.ErrUserNotExists || err == service.ErrTenderNotFound {
+			ErrorResponse(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Debug("err: ", err.Error())
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
+
+	SendJSONResponse(w, tender)
 }

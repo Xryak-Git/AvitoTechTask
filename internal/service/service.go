@@ -14,6 +14,15 @@ type CreateTenderInput struct {
 	CreatorUsername string `json:"creatorUsername" validate:"required"`
 }
 
+type PatchTenderInput struct {
+	Name            string `json:"name" validate:"omitempty,min=3"`
+	Description     string `json:"description" validate:"omitempty"`
+	ServiceType     string `json:"serviceType" validate:"omitempty"`
+	Status          string `json:"status" validate:"omitempty"`
+	OrganizationId  string `json:"organizationId" validate:"omitempty"`
+	CreatorUsername string `json:"creatorUsername" validate:"omitempty"`
+}
+
 type GetParams struct {
 	Limit  int `schema:"limit" validate:"required,gt=0"`
 	Offset int `schema:"offset" validate:"omitempty,gte=0"`
@@ -29,15 +38,22 @@ type GetUserTendersParams struct {
 	Username string `schema:"username" validate:"required,alpha"`
 }
 
-type GetTenderStatusParams struct {
+type UserParam struct {
 	Username string `schema:"username" validate:"required,alpha"`
+}
+
+type UpdateTenderStatusParams struct {
+	UserParam
+	Status string `json:"status" validate:"required"`
 }
 
 type Tender interface {
 	CreateTender(input CreateTenderInput) (entity.Tender, error)
 	GetTenders(gtp GetTendersParams) ([]entity.Tender, error)
 	GetUserTenders(gutp GetUserTendersParams) ([]entity.Tender, error)
-	GetTenderStatus(params GetTenderStatusParams, tenderId string) (string, error)
+	GetTenderStatus(up UserParam, tenderId string) (string, error)
+	PathTender(up UserParam, tenderId string, pti PatchTenderInput) (entity.Tender, error)
+	UpdateTenderStatus(utsp UpdateTenderStatusParams, id string) (entity.Tender, error)
 }
 
 type Bid interface {

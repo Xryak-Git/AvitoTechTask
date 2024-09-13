@@ -78,9 +78,9 @@ func (s *TenderService) GetUserTenders(gutp GetUserTendersParams) ([]entity.Tend
 	return s.tenderRepo.GetUserTenders(context.Background(), gutp.Username, gutp.Limit, gutp.Offset)
 }
 
-func (s *TenderService) GetTenderStatus(gtsp GetTenderStatusParams, tenderId string) (string, error) {
+func (s *TenderService) GetTenderStatus(u UserParam, tenderId string) (string, error) {
 
-	_, err := s.userRepo.GetByName(context.Background(), gtsp.Username)
+	_, err := s.userRepo.GetByName(context.Background(), u.Username)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return "", ErrUserNotExists
@@ -88,7 +88,7 @@ func (s *TenderService) GetTenderStatus(gtsp GetTenderStatusParams, tenderId str
 		return "", err
 	}
 
-	status, err := s.tenderRepo.GetTenderStatus(context.Background(), gtsp.Username, tenderId)
+	status, err := s.tenderRepo.GetTenderStatus(context.Background(), u.Username, tenderId)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return "", ErrTenderNotFound
@@ -96,6 +96,42 @@ func (s *TenderService) GetTenderStatus(gtsp GetTenderStatusParams, tenderId str
 		return "", err
 	}
 	return status, nil
+}
+
+func (s *TenderService) PathTender(u UserParam, tenderId string, pti PatchTenderInput) (entity.Tender, error) {
+	_, err := s.userRepo.GetByName(context.Background(), u.Username)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return entity.Tender{}, ErrUserNotExists
+		}
+		return entity.Tender{}, err
+	}
+
+	s.tenderRepo.UpdateTender(context.Background(), tenderId, []string{})
+	return entity.Tender{}, nil
+}
+
+func (s *TenderService) UpdateTenderStatus(utsp UpdateTenderStatusParams, tenderId string) (entity.Tender, error) {
+
+	_, err := s.userRepo.GetByName(context.Background(), utsp.Username)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return entity.Tender{}, ErrUserNotExists
+		}
+		return entity.Tender{}, err
+	}
+
+	t, err := s.tenderRepo.UpdateTenderStatus(context.Background(), utsp.Status, tenderId)
+
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return entity.Tender{}, ErrTenderNotFound
+		}
+		return entity.Tender{}, err
+	}
+
+	return t, nil
+
 }
 
 //// Получить тендеры пользователя
@@ -112,7 +148,7 @@ func (s *TenderService) GetTenderStatus(gtsp GetTenderStatusParams, tenderId str
 //RollbackTender(w http.ResponseWriter, r *http.Request, tenderId TenderId, version int32, params RollbackTenderParams)
 //// Получение текущего статуса тендера
 //// (GET /tenders/{tenderId}/status)
-//GetTenderStatus(w http.ResponseWriter, r *http.Request, tenderId TenderId, params GetTenderStatusParams)
+//GetTenderStatus(w http.ResponseWriter, r *http.Request, tenderId TenderId, params UserParam)
 //// Изменение статуса тендера
 //// (PUT /tenders/{tenderId}/status)
 //UpdateTenderStatus(w http.ResponseWriter, r *http.Request, tenderId TenderId, params UpdateTenderStatusParams)

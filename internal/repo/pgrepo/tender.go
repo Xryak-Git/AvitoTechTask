@@ -197,3 +197,42 @@ func (r *TenderRepo) GetTenderStatus(ctx context.Context, username, tenderId str
 
 	return status, nil
 }
+
+func (r *TenderRepo) UpdateTender(ctx context.Context, id string, params []string) {
+	const fn = "repo.pgrepo.tender.UpdateTender"
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *TenderRepo) UpdateTenderStatus(ctx context.Context, status, tenderId string) (entity.Tender, error) {
+	const fn = "repo.pgrepo.tender.UpdateTenderStatus"
+
+	sql := `
+		UPDATE tender
+		SET status = UPPER($1)::tender_status
+		WHERE id = $2
+		RETURNING id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at`
+
+	var t entity.Tender
+	err := r.Pool.QueryRow(ctx, sql, status, tenderId).Scan(
+		&t.Id,
+		&t.Name,
+		&t.Description,
+		&t.ServiceType,
+		&t.Status,
+		&t.OrganizationId,
+		&t.Version,
+		&t.CreatedAt,
+	)
+
+	if err != nil {
+		log.Debug("err: ", err)
+		if err == pgx.ErrNoRows {
+			return entity.Tender{}, repoerrs.ErrNotFound
+		}
+		return entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
+	}
+	log.Debug("Upadted tender: ", t)
+
+	return t, nil
+}
