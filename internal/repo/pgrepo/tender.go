@@ -170,23 +170,17 @@ func (r *TenderRepo) GetUserTenders(ctx context.Context, username string, limit 
 	return tenders, nil
 }
 
-func (r *TenderRepo) GetTenderStatus(ctx context.Context, username, tenderId string) (string, error) {
+func (r *TenderRepo) GetTenderStatus(ctx context.Context, tenderId string) (string, error) {
 	const fn = "repo.pgrepo.tender.GetTenderStatus"
 
 	sql := `
 		SELECT INITCAP(status::text) AS status
 		FROM tender
 		WHERE id = $1
-		AND organization_id in (
-			SELECT o.id
-			FROM organization_responsible ores
-					 JOIN organization o ON ores.organization_id = o.id
-					 JOIN employee e ON ores.user_id = e.id
-			WHERE e.username = $2)
 		`
 
 	var status string
-	err := r.Pool.QueryRow(ctx, sql, tenderId, username).Scan(&status)
+	err := r.Pool.QueryRow(ctx, sql, tenderId).Scan(&status)
 	if err != nil {
 		log.Debug("err: ", err)
 		if errors.Is(err, pgx.ErrNoRows) {

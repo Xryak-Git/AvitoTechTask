@@ -16,13 +16,14 @@ services:
   app:
     container_name: app
     build: .
-    environment:
-      - POSTGRES_CONN=postgres://postgres:postgres@postgres:5432/postgres
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     depends_on:
       - postgres
     restart: unless-stopped
+
 
 volumes:
   pg-data:

@@ -22,8 +22,8 @@ func NewTenderService(tenderRepo repo.Tender, userRepo repo.User, responsibleRep
 	}
 }
 
-func (s *TenderService) CreateTender(ct CreateTenderInput) (entity.Tender, error) {
-	u, err := s.userRepo.GetByName(context.Background(), ct.CreatorUsername)
+func (ts *TenderService) CreateTender(ct CreateTenderInput) (entity.Tender, error) {
+	u, err := ts.userRepo.GetByName(context.Background(), ct.CreatorUsername)
 
 	if err != nil {
 		if err == repoerrs.ErrNotExists {
@@ -32,7 +32,7 @@ func (s *TenderService) CreateTender(ct CreateTenderInput) (entity.Tender, error
 		return entity.Tender{}, ErrCannotCreateTender
 	}
 
-	isResponsible, err := s.responsibleRepo.IsUserResponsibleForOrganization(context.Background(), u.Id, ct.OrganizationId)
+	_, err = ts.responsibleRepo.IsUserResponsibleForOrganizationByOrganizationId(context.Background(), u.Id, ct.OrganizationId)
 	if err != nil {
 		if err == repoerrs.ErrNotExists {
 			return entity.Tender{}, ErrUserIsNotResposible
@@ -40,21 +40,17 @@ func (s *TenderService) CreateTender(ct CreateTenderInput) (entity.Tender, error
 		return entity.Tender{}, ErrCannotCreateTender
 	}
 
-	if isResponsible == false {
-		return entity.Tender{}, ErrUserIsNotResposible
-	}
-
-	t, err := s.tenderRepo.CreateTender(context.Background(), ct.Name, ct.Description, ct.ServiceType, ct.Status, ct.OrganizationId)
+	t, err := ts.tenderRepo.CreateTender(context.Background(), ct.Name, ct.Description, ct.ServiceType, ct.Status, ct.OrganizationId)
 
 	return t, err
 }
 
-func (s *TenderService) GetTenders(gtp GetTendersParams) ([]entity.Tender, error) {
+func (ts *TenderService) GetTenders(gtp GetTendersParams) ([]entity.Tender, error) {
 	for i, st := range gtp.ServiceType {
 		gtp.ServiceType[i] = strings.ToUpper(st)
 	}
 
-	tenders, err := s.tenderRepo.GetTenders(context.Background(), gtp.Limit, gtp.Offset, gtp.ServiceType)
+	tenders, err := ts.tenderRepo.GetTenders(context.Background(), gtp.Limit, gtp.Offset, gtp.ServiceType)
 
 	if err != nil {
 		if err == repoerrs.ErrNotExists {
@@ -66,8 +62,8 @@ func (s *TenderService) GetTenders(gtp GetTendersParams) ([]entity.Tender, error
 	return tenders, nil
 }
 
-func (s *TenderService) GetUserTenders(gutp GetUserTendersParams) ([]entity.Tender, error) {
-	_, err := s.userRepo.GetByName(context.Background(), gutp.Username)
+func (ts *TenderService) GetUserTenders(gutp GetUserTendersParams) ([]entity.Tender, error) {
+	_, err := ts.userRepo.GetByName(context.Background(), gutp.Username)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return []entity.Tender{}, ErrUserNotExists
@@ -75,12 +71,12 @@ func (s *TenderService) GetUserTenders(gutp GetUserTendersParams) ([]entity.Tend
 		return []entity.Tender{}, err
 	}
 
-	return s.tenderRepo.GetUserTenders(context.Background(), gutp.Username, gutp.Limit, gutp.Offset)
+	return ts.tenderRepo.GetUserTenders(context.Background(), gutp.Username, gutp.Limit, gutp.Offset)
 }
 
-func (s *TenderService) GetTenderStatus(u UserParam, tenderId string) (string, error) {
+func (ts *TenderService) GetTenderStatus(u UserParam, tenderId string) (string, error) {
 
-	_, err := s.userRepo.GetByName(context.Background(), u.Username)
+	user, err := ts.userRepo.GetByName(context.Background(), u.Username)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return "", ErrUserNotExists
@@ -88,18 +84,36 @@ func (s *TenderService) GetTenderStatus(u UserParam, tenderId string) (string, e
 		return "", err
 	}
 
-	status, err := s.tenderRepo.GetTenderStatus(context.Background(), u.Username, tenderId)
+	status, err := ts.tenderRepo.GetTenderStatus(context.Background(), tenderId)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return "", ErrTenderNotFound
 		}
 		return "", err
 	}
+
+	if status == "Published" {
+		return status, nil
+	}
+
+	isResponsible, err := ts.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), user.Id, tenderId)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return "", ErrUserIsNotResposible
+		}
+		return "", ErrCannotGetTenderStatus
+	}
+
+	if isResponsible == false {
+		return "", ErrUserIsNotResposible
+	}
+
 	return status, nil
+
 }
 
-func (s *TenderService) PathTender(u UserParam, tenderId string, pti PatchTenderInput) (entity.Tender, error) {
-	_, err := s.userRepo.GetByName(context.Background(), u.Username)
+func (ts *TenderService) PathTender(u UserParam, tenderId string, pti PatchTenderInput) (entity.Tender, error) {
+	_, err := ts.userRepo.GetByName(context.Background(), u.Username)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return entity.Tender{}, ErrUserNotExists
@@ -107,13 +121,13 @@ func (s *TenderService) PathTender(u UserParam, tenderId string, pti PatchTender
 		return entity.Tender{}, err
 	}
 
-	s.tenderRepo.UpdateTender(context.Background(), tenderId, []string{})
+	ts.tenderRepo.UpdateTender(context.Background(), tenderId, []string{})
 	return entity.Tender{}, nil
 }
 
-func (s *TenderService) UpdateTenderStatus(utsp UpdateTenderStatusParams, tenderId string) (entity.Tender, error) {
+func (ts *TenderService) UpdateTenderStatus(utsp UpdateTenderStatusParams, tenderId string) (entity.Tender, error) {
 
-	_, err := s.userRepo.GetByName(context.Background(), utsp.Username)
+	_, err := ts.userRepo.GetByName(context.Background(), utsp.Username)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return entity.Tender{}, ErrUserNotExists
@@ -121,7 +135,7 @@ func (s *TenderService) UpdateTenderStatus(utsp UpdateTenderStatusParams, tender
 		return entity.Tender{}, err
 	}
 
-	t, err := s.tenderRepo.UpdateTenderStatus(context.Background(), utsp.Status, tenderId)
+	t, err := ts.tenderRepo.UpdateTenderStatus(context.Background(), utsp.Status, tenderId)
 
 	if err != nil {
 		if err == repoerrs.ErrNotFound {

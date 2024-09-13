@@ -15,7 +15,7 @@ type Config struct {
 }
 
 type HTTPServer struct {
-	Adress      string        `env:"POSTGRES_CONN" envDefault:"0.0.0.0:8080"`
+	Adress      string        `yaml:"port" envDefault:"0.0.0.0:8080"`
 	Timeout     time.Duration `yaml:"timeout"`
 	IdleTimeout time.Duration `yaml:"idle_timeout"`
 }

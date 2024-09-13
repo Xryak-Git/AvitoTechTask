@@ -55,8 +55,8 @@ func (r *ResponsibleRepo) GetAllResponsiblesByUserId(ctx context.Context, userId
 	return responsibles, nil
 }
 
-func (r *ResponsibleRepo) IsUserResponsibleForOrganization(ctx context.Context, userId, organizationId string) (bool, error) {
-	const fn = "repo.pgrepo.responsible.IsUserResponsibleForOrganization"
+func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByOrganizationId(ctx context.Context, userId, organizationId string) (bool, error) {
+	const fn = "repo.pgrepo.responsible.IsUserResponsibleForOrganizationByOrganizationId"
 
 	responsibles, err := r.GetAllResponsiblesByUserId(ctx, userId)
 
@@ -74,4 +74,35 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganization(ctx context.Context, 
 	}
 
 	return false, nil
+}
+
+func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByTenderId(ctx context.Context, userId, tenderId string) (bool, error) {
+	const fn = "repo.pgrepo.responsible.IsUserResponsibleForOrganizationByTenderId"
+
+	sql := `
+	SELECT 
+    org_res.user_id
+	FROM
+		tender t
+	JOIN
+		organization org ON t.organization_id = org.id
+	JOIN
+		organization_responsible org_res ON org.id = org_res.organization_id
+	WHERE
+		t.id = $1
+		AND org_res.user_id = $2
+	`
+
+	var id string
+	err := r.Pool.QueryRow(ctx, sql, tenderId, userId).Scan(&id)
+	fmt.Println(err)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, nil
+		}
+		return false, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	return true, nil
 }

@@ -47,6 +47,14 @@ type UpdateTenderStatusParams struct {
 	Status string `json:"status" validate:"required"`
 }
 
+type CreateBidInput struct {
+	Name        string `json:"name" validate:"required,alpha"`
+	Description string `json:"description" validate:"required,alpha"`
+	TenderId    string `json:"tenderId" validate:"required,alpha"`
+	AuthorType  string `json:"authorType" validate:"required,alpha"`
+	AuthorId    string `json:"authorId" validate:"required,alpha"`
+}
+
 type Tender interface {
 	CreateTender(input CreateTenderInput) (entity.Tender, error)
 	GetTenders(gtp GetTendersParams) ([]entity.Tender, error)
@@ -57,6 +65,7 @@ type Tender interface {
 }
 
 type Bid interface {
+	CreateBid(input CreateBidInput) (entity.Bid, error)
 }
 
 type Services struct {
@@ -67,5 +76,6 @@ type Services struct {
 func NewServices(r *repo.Repositories) *Services {
 	return &Services{
 		Tender: NewTenderService(r.Tender, r.User, r.Responsible),
+		Bid:    NewBidService(r.Bid, r.User, r.Responsible),
 	}
 }

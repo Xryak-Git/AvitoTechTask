@@ -18,7 +18,7 @@ func NewTenderController(tenderService service.Tender) TenderController {
 	}
 }
 
-func (tr *TenderController) CreateTender(w http.ResponseWriter, r *http.Request) {
+func (tc *TenderController) CreateTender(w http.ResponseWriter, r *http.Request) {
 
 	t, err := ParseJSONBody[service.CreateTenderInput](r, w)
 
@@ -27,7 +27,7 @@ func (tr *TenderController) CreateTender(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tender, err := tr.tenderService.CreateTender(*t)
+	tender, err := tc.tenderService.CreateTender(*t)
 
 	if err != nil {
 		if err == service.ErrUserIsNotResposible || err == service.ErrUserNotExists {
@@ -42,7 +42,7 @@ func (tr *TenderController) CreateTender(w http.ResponseWriter, r *http.Request)
 	SendJSONResponse(w, tender)
 }
 
-func (tr *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
+func (tc *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
 
 	gtp, err := DecodeFormParams[service.GetTendersParams](r)
 
@@ -51,7 +51,7 @@ func (tr *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tenders, err := tr.tenderService.GetTenders(*gtp)
+	tenders, err := tc.tenderService.GetTenders(*gtp)
 
 	if err != nil {
 		if err == service.ErrTendersNotFound {
@@ -66,7 +66,7 @@ func (tr *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
 	SendJSONResponse(w, tenders)
 }
 
-func (tr *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Request) {
+func (tc *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Request) {
 
 	gutp, err := DecodeFormParams[service.GetUserTendersParams](r)
 	if err != nil {
@@ -76,7 +76,7 @@ func (tr *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Reques
 
 	fmt.Println(gutp)
 
-	tenders, err := tr.tenderService.GetUserTenders(*gutp)
+	tenders, err := tc.tenderService.GetUserTenders(*gutp)
 
 	if err != nil {
 		if err == service.ErrUserNotExists {
@@ -97,7 +97,7 @@ func (tr *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Reques
 	SendJSONResponse(w, tenders)
 }
 
-func (tr *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Request) {
+func (tc *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Request) {
 
 	u, err := DecodeFormParams[service.UserParam](r)
 	if err != nil {
@@ -107,10 +107,10 @@ func (tr *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Reque
 
 	tenderId := chi.URLParam(r, "tenderId")
 
-	status, err := tr.tenderService.GetTenderStatus(*u, tenderId)
+	status, err := tc.tenderService.GetTenderStatus(*u, tenderId)
 
 	if err != nil {
-		if err == service.ErrTenderNotFound || err == service.ErrUserNotExists {
+		if err == service.ErrTenderNotFound || err == service.ErrUserNotExists || err == service.ErrUserIsNotResposible {
 			ErrorResponse(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -122,7 +122,7 @@ func (tr *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Reque
 	SendJSONResponse(w, status)
 }
 
-func (tr *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
+func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 	//TODO: implement me fully
 	u, err := DecodeFormParams[service.UserParam](r)
 	if err != nil {
@@ -138,7 +138,7 @@ func (tr *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 
 	tenderId := chi.URLParam(r, "tenderId")
 
-	tender, err := tr.tenderService.PathTender(*u, tenderId, *pt)
+	tender, err := tc.tenderService.PathTender(*u, tenderId, *pt)
 
 	if err != nil {
 		if err == service.ErrUserNotExists || err == service.ErrTenderNotFound {
@@ -154,12 +154,12 @@ func (tr *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (tr *TenderController) RollbackTender(w http.ResponseWriter, r *http.Request) {
+func (tc *TenderController) RollbackTender(w http.ResponseWriter, r *http.Request) {
 	//TODO: implement me
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 
-func (tr *TenderController) UpdateTenderStatus(w http.ResponseWriter, r *http.Request) {
+func (tc *TenderController) UpdateTenderStatus(w http.ResponseWriter, r *http.Request) {
 	utsp, err := DecodeFormParams[service.UpdateTenderStatusParams](r)
 	if err != nil {
 		HandleRequestError(w, err)
@@ -168,7 +168,7 @@ func (tr *TenderController) UpdateTenderStatus(w http.ResponseWriter, r *http.Re
 
 	tenderId := chi.URLParam(r, "tenderId")
 
-	tender, err := tr.tenderService.UpdateTenderStatus(*utsp, tenderId)
+	tender, err := tc.tenderService.UpdateTenderStatus(*utsp, tenderId)
 
 	if err != nil {
 		if err == service.ErrUserNotExists || err == service.ErrTenderNotFound {

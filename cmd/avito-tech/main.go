@@ -9,6 +9,8 @@ import (
 	"avitoTech/internal/storage/postgres"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -30,6 +32,18 @@ func main() {
 	log.Info("Initializing handlers and routes...")
 	r := router.NewRouter(services)
 
-	http.ListenAndServe(":8080", r)
+	// Сообщаем, что сервер запускается
+	log.Info("Server starting on port: " + cfg.HTTPServer.Adress)
+
+	// Запускаем сервер и обрабатываем возможные ошибки
+	if err := http.ListenAndServe(""+cfg.HTTPServer.Adress, r); err != nil {
+		log.Error("Server failed to start", err)
+		os.Exit(1)
+	}
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	<-stop
 
 }
