@@ -30,14 +30,14 @@ type GetUserTendersParams struct {
 }
 
 type GetTenderStatusParams struct {
-	TenderId string `schema:"tenderId"`
 	Username string `schema:"username"`
 }
 
 type Tender interface {
 	CreateTender(input CreateTenderInput) (entity.Tender, error)
 	GetTenders(gtp GetTendersParams) ([]entity.Tender, error)
-	GetUserTenders(gtp GetUserTendersParams) ([]entity.Tender, error)
+	GetUserTenders(gutp GetUserTendersParams) ([]entity.Tender, error)
+	GetTenderStatus(params GetTenderStatusParams, tenderId string) (string, error)
 }
 
 type Bid interface {

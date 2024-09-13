@@ -3,6 +3,8 @@ package controller
 import (
 	"avitoTech/internal/service"
 	"encoding/json"
+	"fmt"
+	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/schema"
 	"io"
 	log "log/slog"
@@ -105,9 +107,49 @@ func (tr *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	if err != nil {
+		if err == service.ErrTendersNotFound {
+			ErrorResponse(w, "tenders not found", http.StatusBadRequest)
+			return
+		}
+		log.Debug("err: %v", err.Error())
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tenders)
 
+}
+
+func (tr *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid params", http.StatusBadRequest)
+		return
+	}
+
+	gtsp := new(service.GetTenderStatusParams)
+	if err := schema.NewDecoder().Decode(gtsp, r.Form); err != nil {
+		http.Error(w, "invalid params", http.StatusInternalServerError)
+		return
+	}
+
+	tenderId := chi.URLParam(r, "tenderId")
+	fmt.Println(tenderId)
+	status, err := tr.tenderService.GetTenderStatus(*gtsp, tenderId)
+
+	if err != nil {
+		if err == service.ErrTendersNotFound {
+			ErrorResponse(w, "tenders not found", http.StatusBadRequest)
+			return
+		}
+		log.Debug("err: %v", err.Error())
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(status)
 }
 
 func (tr *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
@@ -115,10 +157,6 @@ func (tr *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 }
 
 func (tr *TenderController) RollbackTender(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
-}
-
-func (tr *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Request) {
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 
