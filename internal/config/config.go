@@ -9,15 +9,19 @@ import (
 
 type Config struct {
 	Env        string `yaml:"env"  envDefault:"development"`
-	StorageURL string `yaml:"storage_url" env-requierd:"true"`
 	LogLevel   string `yaml:"log_level" env-default:"debug"`
 	HTTPServer `yaml:"http_server"`
+	Postgres   `yaml:"postgres"`
 }
 
 type HTTPServer struct {
-	Adress      string        `yaml:"adress" env-default:"localhost:8080"`
+	Adress      string        `env:"POSTGRES_CONN" envDefault:"0.0.0.0:8080"`
 	Timeout     time.Duration `yaml:"timeout"`
 	IdleTimeout time.Duration `yaml:"idle_timeout"`
+}
+
+type Postgres struct {
+	URL string `env-required:"true" env:"POSTGRES_CONN"`
 }
 
 func MustLoad() *Config {
@@ -30,11 +34,16 @@ func MustLoad() *Config {
 		log.Fatalf("config file was not found by this path %s: ", configPath)
 	}
 
-	var cfg Config
+	cfg := &Config{}
 
-	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+	if err := cleanenv.ReadConfig(configPath, cfg); err != nil {
 		log.Fatalf("cannot read config: %s", err)
 	}
 
-	return &cfg
+	err := cleanenv.UpdateEnv(cfg)
+	if err != nil {
+		log.Fatalf("cannot update config: %s", err)
+	}
+
+	return cfg
 }
