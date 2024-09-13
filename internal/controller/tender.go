@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/schema"
-	"io"
 	log "log/slog"
 	"net/http"
 )
@@ -22,20 +21,16 @@ func NewTenderController(tenderService service.Tender) TenderController {
 }
 
 func (tr *TenderController) CreateTender(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+
+	t, err := ParseJSONBody[service.CreateTenderInput](r, w)
+
 	if err != nil {
 		ErrorResponse(w, "invalid request body", http.StatusBadRequest)
+		log.Debug("err: " + err.Error())
 		return
 	}
 
-	var t service.CreateTenderInput
-	err = json.Unmarshal(body, &t)
-	if err != nil {
-		ErrorResponse(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	tender, err := tr.tenderService.CreateTender(t)
+	tender, err := tr.tenderService.CreateTender(*t)
 
 	if err != nil {
 		if err == service.ErrUserIsNotResposible || err == service.ErrUserNotExists {
@@ -47,19 +42,16 @@ func (tr *TenderController) CreateTender(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tender)
+	SendJSONResponse(w, tender)
 }
 
 func (tr *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "invalid params", http.StatusBadRequest)
-		return
-	}
 
-	gtp := new(service.GetTendersParams)
-	if err := schema.NewDecoder().Decode(gtp, r.Form); err != nil {
-		http.Error(w, "invalid params", http.StatusInternalServerError)
+	gtp, err := DecodeFormParams[service.GetTendersParams](r)
+
+	if err != nil {
+		ErrorResponse(w, "invalid params", http.StatusBadRequest)
+		log.Debug("err: " + err.Error())
 		return
 	}
 
@@ -74,19 +66,16 @@ func (tr *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
 		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tenders)
+
+	SendJSONResponse(w, tenders)
 }
 
 func (tr *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "invalid params", http.StatusBadRequest)
-		return
-	}
 
-	gutp := new(service.GetUserTendersParams)
-	if err := schema.NewDecoder().Decode(gutp, r.Form); err != nil {
-		http.Error(w, "invalid params", http.StatusInternalServerError)
+	gutp, err := DecodeFormParams[service.GetUserTendersParams](r)
+	if err != nil {
+		ErrorResponse(w, "invalid params", http.StatusBadRequest)
+		log.Debug("err: " + err.Error())
 		return
 	}
 
