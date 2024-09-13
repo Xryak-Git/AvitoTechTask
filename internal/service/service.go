@@ -60,7 +60,7 @@ type Tender interface {
 	GetTenders(gtp GetTendersParams) ([]entity.Tender, error)
 	GetUserTenders(gutp GetUserTendersParams) ([]entity.Tender, error)
 	GetTenderStatus(up UserParam, tenderId string) (string, error)
-	PathTender(up UserParam, tenderId string, pti PatchTenderInput) (entity.Tender, error)
+	EditTender(up UserParam, tenderId string, params map[string]interface{}) (entity.Tender, error)
 	UpdateTenderStatus(utsp UpdateTenderStatusParams, id string) (entity.Tender, error)
 }
 

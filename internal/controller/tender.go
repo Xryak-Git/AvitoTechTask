@@ -2,10 +2,13 @@ package controller
 
 import (
 	"avitoTech/internal/service"
+	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"io"
 	log "log/slog"
 	"net/http"
+	"strings"
 )
 
 type TenderController struct {
@@ -130,15 +133,34 @@ func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pt, err := ParseJSONBody[service.PatchTenderInput](r, w)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		HandleRequestError(w, err)
 		return
 	}
 
+	params := make(map[string]interface{})
+	err = json.Unmarshal(body, &params)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	if val, ok := params["serviceType"]; ok {
+		params["service_type"] = strings.ToUpper(val.(string)) // Добавляем новое значение с новым ключом
+		delete(params, "serviceType")                          // Удаляем старый ключ
+	}
+
+	if val, ok := params["organizationId"]; ok {
+		params["organization_id"] = val.(string) // Добавляем новое значение с новым ключом
+		delete(params, "serviceType")            // Удаляем старый ключ
+	}
+
+	fmt.Println(params)
+
 	tenderId := chi.URLParam(r, "tenderId")
 
-	tender, err := tc.tenderService.PathTender(*u, tenderId, *pt)
+	tender, err := tc.tenderService.EditTender(*u, tenderId, params)
 
 	if err != nil {
 		if err == service.ErrUserNotExists || err == service.ErrTenderNotFound {

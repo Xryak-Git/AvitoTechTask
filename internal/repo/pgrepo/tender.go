@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	log "log/slog"
@@ -192,10 +193,41 @@ func (r *TenderRepo) GetTenderStatus(ctx context.Context, tenderId string) (stri
 	return status, nil
 }
 
-func (r *TenderRepo) UpdateTender(ctx context.Context, id string, params []string) {
+func (r *TenderRepo) UpdateTender(ctx context.Context, tenderId string, params map[string]interface{}) (entity.Tender, error) {
 	const fn = "repo.pgrepo.tender.UpdateTender"
-	//TODO implement me
-	panic("implement me")
+
+	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+
+	sql, args, _ := builder.
+		Update("tender").
+		SetMap(params).
+		Where("id = ?", tenderId).
+		Suffix("RETURNING id").
+		ToSql()
+
+	var id string
+	err := r.Pool.QueryRow(ctx, sql, args...).Scan(&id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return entity.Tender{}, repoerrs.ErrNotFound
+		}
+		log.Debug("err: ", err.Error())
+		return entity.Tender{}, err
+	}
+
+	sql = `
+		UPDATE tender
+		SET version = version + 1
+		WHERE id = $1
+		`
+	_, err = r.Pool.Exec(ctx, sql, id)
+	if err != nil {
+		log.Debug("err: ", err.Error())
+		return entity.Tender{}, err
+	}
+
+	return r.GetTenderById(ctx, id)
+
 }
 
 func (r *TenderRepo) UpdateTenderStatus(ctx context.Context, status, tenderId string) (entity.Tender, error) {
@@ -209,6 +241,39 @@ func (r *TenderRepo) UpdateTenderStatus(ctx context.Context, status, tenderId st
 
 	var t entity.Tender
 	err := r.Pool.QueryRow(ctx, sql, status, tenderId).Scan(
+		&t.Id,
+		&t.Name,
+		&t.Description,
+		&t.ServiceType,
+		&t.Status,
+		&t.OrganizationId,
+		&t.Version,
+		&t.CreatedAt,
+	)
+
+	if err != nil {
+		log.Debug("err: ", err)
+		if err == pgx.ErrNoRows {
+			return entity.Tender{}, repoerrs.ErrNotFound
+		}
+		return entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
+	}
+	log.Debug("Upadted tender: ", t)
+
+	return t, nil
+}
+
+func (r *TenderRepo) GetTenderById(ctx context.Context, tenderId string) (entity.Tender, error) {
+	const fn = "repo.pgrepo.tender.UpdateTenderStatus"
+
+	sql := `
+	SELECT id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at
+	FROM tender
+	WHERE id = $1
+	`
+
+	var t entity.Tender
+	err := r.Pool.QueryRow(ctx, sql, tenderId).Scan(
 		&t.Id,
 		&t.Name,
 		&t.Description,

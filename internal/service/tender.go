@@ -112,7 +112,7 @@ func (ts *TenderService) GetTenderStatus(u UserParam, tenderId string) (string, 
 
 }
 
-func (ts *TenderService) PathTender(u UserParam, tenderId string, pti PatchTenderInput) (entity.Tender, error) {
+func (ts *TenderService) EditTender(u UserParam, tenderId string, params map[string]interface{}) (entity.Tender, error) {
 	_, err := ts.userRepo.GetByName(context.Background(), u.Username)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
@@ -121,8 +121,7 @@ func (ts *TenderService) PathTender(u UserParam, tenderId string, pti PatchTende
 		return entity.Tender{}, err
 	}
 
-	ts.tenderRepo.UpdateTender(context.Background(), tenderId, []string{})
-	return entity.Tender{}, nil
+	return ts.tenderRepo.UpdateTender(context.Background(), tenderId, params)
 }
 
 func (ts *TenderService) UpdateTenderStatus(utsp UpdateTenderStatusParams, tenderId string) (entity.Tender, error) {
