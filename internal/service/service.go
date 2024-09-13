@@ -15,22 +15,22 @@ type CreateTenderInput struct {
 }
 
 type GetParams struct {
-	Limit  int `schema:"limit"`
-	Offset int `schema:"offset"`
+	Limit  int `schema:"limit" validate:"required,gt=0"`
+	Offset int `schema:"offset" validate:"omitempty,gte=0"`
 }
 
 type GetTendersParams struct {
 	GetParams
-	ServiceType []string `schema:"service_type"`
+	ServiceType []string `schema:"service_type" validate:"required,dive,alpha"`
 }
 
 type GetUserTendersParams struct {
 	GetParams
-	Username string `schema:"username"`
+	Username string `schema:"username" validate:"required,alpha"`
 }
 
 type GetTenderStatusParams struct {
-	Username string `schema:"username"`
+	Username string `schema:"username" validate:"required,alpha"`
 }
 
 type Tender interface {

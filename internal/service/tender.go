@@ -79,7 +79,23 @@ func (s *TenderService) GetUserTenders(gutp GetUserTendersParams) ([]entity.Tend
 }
 
 func (s *TenderService) GetTenderStatus(gtsp GetTenderStatusParams, tenderId string) (string, error) {
-	return s.tenderRepo.GetTenderStatus(context.Background(), gtsp.Username, tenderId)
+
+	_, err := s.userRepo.GetByName(context.Background(), gtsp.Username)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return "", ErrUserNotExists
+		}
+		return "", err
+	}
+
+	status, err := s.tenderRepo.GetTenderStatus(context.Background(), gtsp.Username, tenderId)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return "", ErrTenderNotFound
+		}
+		return "", err
+	}
+	return status, nil
 }
 
 //// Получить тендеры пользователя

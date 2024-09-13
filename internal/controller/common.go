@@ -51,6 +51,12 @@ func DecodeFormParams[T any](r *http.Request) (*T, error) {
 		return nil, err
 	}
 
+	validate := validator.New()
+
+	if err := validate.Struct(params); err != nil {
+		return nil, err
+	}
+
 	return params, nil
 }
 
