@@ -61,15 +61,28 @@ func (r *TenderRepo) CreateTender(ctx context.Context, name, description, servic
 func (r *TenderRepo) GetTenders(ctx context.Context, limit, offset int, serviceType []string) ([]entity.Tender, error) {
 	const fn = "repo.pgrepo.tender.GetTenders"
 
-	sql := `
-	SELECT id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at
-	FROM tender
-	WHERE service_type::text = ANY($1)
-	LIMIT $2
-	OFFSET $3
-	`
+	var rows pgx.Rows
+	var err error
 
-	rows, err := r.Pool.Query(ctx, sql, serviceType, limit, offset)
+	if len(serviceType) == 0 {
+		sql := `
+		SELECT id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at
+		FROM tender
+		LIMIT $1
+		OFFSET $2
+		`
+		rows, err = r.Pool.Query(ctx, sql, limit, offset)
+	} else {
+		sql := `
+		SELECT id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at
+		FROM tender
+		WHERE service_type::text = ANY($1)
+		LIMIT $2
+		OFFSET $3
+		`
+		rows, err = r.Pool.Query(ctx, sql, serviceType, limit, offset)
+
+	}
 
 	if err != nil {
 		log.Debug("err: ", err)
@@ -155,4 +168,32 @@ func (r *TenderRepo) GetUserTenders(ctx context.Context, username string, limit 
 	log.Debug("GetUserTenders: ", tenders)
 
 	return tenders, nil
+}
+
+func (r *TenderRepo) GetTenderStatus(ctx context.Context, username, tenderId string) (string, error) {
+	const fn = "repo.pgrepo.tender.GetTenderStatus"
+
+	sql := `
+		SELECT INITCAP(status::text) AS status
+		FROM tender
+		WHERE id = $1
+		AND organization_id in (
+			SELECT o.id
+			FROM organization_responsible ores
+					 JOIN organization o ON ores.organization_id = o.id
+					 JOIN employee e ON ores.user_id = e.id
+			WHERE e.username = $2)
+		`
+
+	var status string
+	err := r.Pool.QueryRow(ctx, sql, tenderId, username).Scan(&status)
+	if err != nil {
+		log.Debug("err: ", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", repoerrs.ErrNotFound
+		}
+		return "", fmt.Errorf("%s: %v", fn, err)
+	}
+
+	return status, nil
 }
