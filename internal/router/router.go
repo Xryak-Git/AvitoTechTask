@@ -5,7 +5,6 @@ import (
 	"avitoTech/internal/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"net/http"
 )
 
 func NewRouter(services *service.Services) chi.Router {
@@ -16,13 +15,7 @@ func NewRouter(services *service.Services) chi.Router {
 	tc := controller.NewTenderController(services.Tender)
 
 	r.Route("/api", func(r chi.Router) {
-		r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/plain")
-			_, err := w.Write([]byte("ok"))
-			if err != nil {
-				http.Error(w, "server is not ready", http.StatusInternalServerError)
-			}
-		})
+		r.Get("/ping", controller.Ping)
 
 		r.Route("/tenders", func(r chi.Router) {
 			r.Get("/", tc.GetTenders)
