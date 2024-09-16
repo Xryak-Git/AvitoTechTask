@@ -1,8 +1,5 @@
-.PHONY: migrate lint test
-
-
-migrate:
-	migrate -path migrations -database '$(POSTGRES_CONN)?sslmode=disable' up
+include .env
+export
 
 migrate-up: ### migration up
 	migrate -path /migrations -database '$(POSTGRES_CONN)?sslmode=disable' up

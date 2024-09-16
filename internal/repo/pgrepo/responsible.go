@@ -47,7 +47,7 @@ func (r *ResponsibleRepo) GetAllResponsiblesByUserId(ctx context.Context, userId
 			&responsible.UserId,
 		)
 		if err != nil {
-			return []entity.Responsible{}, fmt.Errorf("%s: %v", err)
+			return []entity.Responsible{}, fmt.Errorf("%s: %v", fn, err)
 		}
 		responsibles = append(responsibles, responsible)
 	}
@@ -62,7 +62,7 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByOrganizationId(ctx c
 
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
-			return false, nil
+			return false, err
 		}
 		return false, fmt.Errorf("%s: %v", fn, err)
 	}
@@ -99,7 +99,7 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByTenderId(ctx context
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return false, nil
+			return false, repoerrs.ErrNotFound
 		}
 		return false, fmt.Errorf("%s: %v", fn, err)
 	}

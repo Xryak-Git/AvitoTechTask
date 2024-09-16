@@ -12,8 +12,10 @@ type Tender interface {
 	GetTenders(ctx context.Context, limit, offset int, serviceType []string) ([]entity.Tender, error)
 	GetUserTenders(ctx context.Context, username string, limit int, offset int) ([]entity.Tender, error)
 	GetTenderStatus(ctx context.Context, tenderId string) (string, error)
-	UpdateTender(ctx context.Context, id string, params map[string]interface{}) (entity.Tender, error)
-	UpdateTenderStatus(ctx context.Context, id, status string) (entity.Tender, error)
+	UpdateTender(ctx context.Context, tenderId string, params map[string]interface{}) (entity.Tender, error)
+	UpdateTenderStatus(ctx context.Context, tenderId, status string) (entity.Tender, error)
+	RollbackTenderVersion(ctx context.Context, tenderId string, version int) error
+	GetTenderById(ctx context.Context, tenderId string) (entity.Tender, error)
 }
 
 type Bid interface {

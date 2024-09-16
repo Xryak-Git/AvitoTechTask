@@ -16,6 +16,14 @@ type Tender struct {
 	CreatedAt      time.Time `db:"created_at" json:"createdAt"`
 }
 
+type VersionedTender struct {
+	Name           string `db:"name"`
+	Description    string `db:"description"`
+	ServiceType    string `db:"service_type"`
+	Status         string `db:"status"`
+	OrganizationId string `db:"organization_id"`
+}
+
 func (t *Tender) Capitalize() {
 	t.ServiceType = strings.Title(strings.ToLower(t.ServiceType))
 	t.Status = strings.Title(strings.ToLower(t.Status))

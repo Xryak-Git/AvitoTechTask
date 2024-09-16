@@ -62,6 +62,7 @@ type Tender interface {
 	GetTenderStatus(up UserParam, tenderId string) (string, error)
 	EditTender(up UserParam, tenderId string, params map[string]interface{}) (entity.Tender, error)
 	UpdateTenderStatus(utsp UpdateTenderStatusParams, id string) (entity.Tender, error)
+	RollbackTender(u UserParam, tenderId string, version int) (entity.Tender, error)
 }
 
 type Bid interface {

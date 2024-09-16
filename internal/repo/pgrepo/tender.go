@@ -194,7 +194,7 @@ func (r *TenderRepo) GetTenderStatus(ctx context.Context, tenderId string) (stri
 }
 
 func (r *TenderRepo) UpdateTender(ctx context.Context, tenderId string, params map[string]interface{}) (entity.Tender, error) {
-	const fn = "repo.pgrepo.tender.UpdateTender"
+	const fn = "repo.pgrepo.tender.VersionedTender"
 
 	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
@@ -264,7 +264,7 @@ func (r *TenderRepo) UpdateTenderStatus(ctx context.Context, status, tenderId st
 }
 
 func (r *TenderRepo) GetTenderById(ctx context.Context, tenderId string) (entity.Tender, error) {
-	const fn = "repo.pgrepo.tender.UpdateTenderStatus"
+	const fn = "repo.pgrepo.tender.GetTenderById"
 
 	sql := `
 	SELECT id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at
@@ -285,13 +285,59 @@ func (r *TenderRepo) GetTenderById(ctx context.Context, tenderId string) (entity
 	)
 
 	if err != nil {
-		log.Debug("err: ", err)
 		if err == pgx.ErrNoRows {
 			return entity.Tender{}, repoerrs.ErrNotFound
 		}
+		log.Debug("err: ", fn, err)
 		return entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
 	}
 	log.Debug("Upadted tender: ", t)
 
 	return t, nil
+}
+
+func (r *TenderRepo) RollbackTenderVersion(ctx context.Context, tenderId string, version int) error {
+	const fn = "repo.pgrepo.tender.RollbackTenderVersion"
+
+	sql := `
+	SELECT name, description, service_type, status, organization_id 
+	FROM tender_versions
+	WHERE tender_id = $1 AND version = $2
+    `
+
+	var vc entity.VersionedTender
+	err := r.Pool.QueryRow(ctx, sql, tenderId, version).Scan(
+		&vc.Name,
+		&vc.Description,
+		&vc.ServiceType,
+		&vc.Status,
+		&vc.OrganizationId,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return repoerrs.ErrNotFound
+		}
+		log.Debug("err: ", fn, err)
+		return fmt.Errorf("%s: %v", fn, err)
+	}
+
+	// Увеличение версии и сохранение как новой
+	sql = `
+        UPDATE tender 
+        SET name = $1, description = $2, service_type = $3, 
+            status = $4, organization_id = $5
+        WHERE id = $6
+        `
+
+	_, err = r.Pool.Exec(ctx, sql, vc.Name, vc.Description, vc.ServiceType, vc.Status, vc.OrganizationId, tenderId)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return repoerrs.ErrNotFound
+		}
+		log.Debug("err: ", fn, err)
+		return fmt.Errorf("%s: %v", fn, err)
+	}
+
+	return err
 }

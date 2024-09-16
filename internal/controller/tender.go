@@ -3,11 +3,11 @@ package controller
 import (
 	"avitoTech/internal/service"
 	"encoding/json"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"io"
 	log "log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -33,10 +33,15 @@ func (tc *TenderController) CreateTender(w http.ResponseWriter, r *http.Request)
 	tender, err := tc.tenderService.CreateTender(*t)
 
 	if err != nil {
-		if err == service.ErrUserIsNotResposible || err == service.ErrUserNotExists {
-			ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+
 		log.Debug("err: ", err.Error())
 		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
 		return
@@ -57,10 +62,6 @@ func (tc *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
 	tenders, err := tc.tenderService.GetTenders(*gtp)
 
 	if err != nil {
-		if err == service.ErrTendersNotFound {
-			ErrorResponse(w, "tenders not found", http.StatusBadRequest)
-			return
-		}
 		log.Debug("err: %v", err.Error())
 		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
 		return
@@ -77,23 +78,16 @@ func (tc *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	fmt.Println(gutp)
-
 	tenders, err := tc.tenderService.GetUserTenders(*gutp)
 
 	if err != nil {
 		if err == service.ErrUserNotExists {
-			ErrorResponse(w, "user not exists", http.StatusUnauthorized)
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
 		log.Debug("err: %v", err.Error())
 		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
-		return
-	}
-
-	if len(tenders) == 0 {
-		ErrorResponse(w, "tenders not found", http.StatusBadRequest)
 		return
 	}
 
@@ -113,9 +107,16 @@ func (tc *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Reque
 	status, err := tc.tenderService.GetTenderStatus(*u, tenderId)
 
 	if err != nil {
-		if err == service.ErrTenderNotFound || err == service.ErrUserNotExists || err == service.ErrUserIsNotResposible {
-			ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
 			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrTenderNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
 		}
 		log.Debug("err: %v", err.Error())
 		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
@@ -147,27 +148,33 @@ func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if val, ok := params["serviceType"]; ok {
-		params["service_type"] = strings.ToUpper(val.(string)) // Добавляем новое значение с новым ключом
-		delete(params, "serviceType")                          // Удаляем старый ключ
+		params["service_type"] = strings.ToUpper(val.(string))
+		delete(params, "serviceType")
 	}
 
 	if val, ok := params["organizationId"]; ok {
-		params["organization_id"] = val.(string) // Добавляем новое значение с новым ключом
-		delete(params, "serviceType")            // Удаляем старый ключ
+		params["organization_id"] = val.(string)
+		delete(params, "serviceType")
 	}
-
-	fmt.Println(params)
 
 	tenderId := chi.URLParam(r, "tenderId")
 
 	tender, err := tc.tenderService.EditTender(*u, tenderId, params)
 
 	if err != nil {
-		if err == service.ErrUserNotExists || err == service.ErrTenderNotFound {
+		if err == service.ErrUserNotExists {
 			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		log.Debug("err: %v", err.Error())
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrTenderNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		log.Debug("err: ", err.Error())
 		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
 		return
 	}
@@ -177,8 +184,24 @@ func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 }
 
 func (tc *TenderController) RollbackTender(w http.ResponseWriter, r *http.Request) {
-	//TODO: implement me
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	u, err := DecodeFormParams[service.UserParam](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+	tenderId := chi.URLParam(r, "tenderId")
+	versionStr := chi.URLParam(r, "version")
+
+	versionInt, err := strconv.Atoi(versionStr)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	tender, err := tc.tenderService.RollbackTender(*u, tenderId, versionInt)
+
+	SendJSONResponse(w, tender)
+
 }
 
 func (tc *TenderController) UpdateTenderStatus(w http.ResponseWriter, r *http.Request) {
@@ -193,8 +216,16 @@ func (tc *TenderController) UpdateTenderStatus(w http.ResponseWriter, r *http.Re
 	tender, err := tc.tenderService.UpdateTenderStatus(*utsp, tenderId)
 
 	if err != nil {
-		if err == service.ErrUserNotExists || err == service.ErrTenderNotFound {
-			ErrorResponse(w, err.Error(), http.StatusBadRequest)
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrTenderNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
 			return
 		}
 		log.Debug("err: ", err.Error())
