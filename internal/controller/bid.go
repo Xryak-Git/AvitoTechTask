@@ -148,7 +148,17 @@ func (bc *BidController) SubmitBidDecision(w http.ResponseWriter, r *http.Reques
 }
 
 func (bc *BidController) SubmitBidFeedback(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	bf, err := DecodeFormParams[service.SubmitBidFeedbackParams](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+	bidId := chi.URLParam(r, "bidId")
+
+	bid, err := bc.BidService.SubmitBidFeedback(*bf, bidId)
+	log.Debug("GetBidsForTender err: ", err)
+
+	SendJSONResponse(w, bid)
 }
 
 func (bc *BidController) RollbackBid(w http.ResponseWriter, r *http.Request) {

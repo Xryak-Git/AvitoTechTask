@@ -231,3 +231,68 @@ func (r *BidRepo) EditBid(ctx context.Context, bidId string, params map[string]i
 
 	return b, nil
 }
+
+func (r *BidRepo) CreateBidFeedback(ctx context.Context, feedback string, bidId string) error {
+	const fn = "repo.pgrepo.bid.CreateBidFeedback"
+
+	sql := `
+	INSERT INTO bid_review
+	(description)
+	VALUES
+	($1)
+	RETURNING id
+	`
+
+	var reviewId string
+	err := r.Pool.QueryRow(ctx, sql, feedback).Scan(
+		&reviewId,
+	)
+	if err != nil {
+		return repoerrs.ErrUnableToInsert
+	}
+
+	sql = `
+	INSERT INTO bid_bidreview
+	(bid_id, bid_review_id)
+	VALUES
+	($1, $2)
+	`
+	if _, err = r.Pool.Exec(ctx, sql, bidId, reviewId); err != nil {
+		return repoerrs.ErrUnableToInsert
+
+	}
+
+	return nil
+
+}
+
+func (r *BidRepo) GetBid(ctx context.Context, id string) (entity.Bid, error) {
+	const fn = "repo.pgrepo.bid.GetBid"
+
+	sql := `
+	SELECT id, name, description, status, tender_id, INITCAP(author_type::text), author_id, version, created_at
+	FROM bid
+	WHERE id = $1
+	`
+
+	var b entity.Bid
+	err := r.Pool.QueryRow(ctx, sql, id).Scan(
+		&b.Id,
+		&b.Name,
+		&b.Description,
+		&b.Status,
+		&b.TenderId,
+		&b.AuthorType,
+		&b.AuthorId,
+		&b.Version,
+		&b.CreatedAt,
+	)
+	if err != nil {
+		log.Debug("err: ", err)
+		if err == pgx.ErrNoRows {
+			return entity.Bid{}, repoerrs.ErrNotFound
+		}
+		return entity.Bid{}, fmt.Errorf("%s: %v", fn, err)
+	}
+	return b, nil
+}
