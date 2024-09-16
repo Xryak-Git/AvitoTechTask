@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS employee (
 );
 
 CREATE TABLE IF NOT EXISTS tender (
-                                      id SERIAL PRIMARY KEY,
+                                      id UUID PRIMARY KEY,
                                       name VARCHAR(100),
                                       description TEXT,
                                       service_type service_type,
@@ -65,11 +65,11 @@ CREATE TABLE IF NOT EXISTS tender (
 );
 
 CREATE TABLE IF NOT EXISTS bid (
-                                   id SERIAL PRIMARY KEY,
+                                   id UUID PRIMARY KEY,
                                    name VARCHAR(100),
                                    description TEXT,
                                    status bid_status DEFAULT 'CREATED',
-                                   tender_id INT REFERENCES tender(id) ON DELETE CASCADE,
+                                   tender_id UUID REFERENCES tender(id) ON DELETE CASCADE,
                                    author_type author_type,
                                    author_id UUID REFERENCES employee(id) ON DELETE CASCADE,
                                    version INT DEFAULT 1,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS bid (
 );
 
 CREATE TABLE IF NOT EXISTS bid_review (
-                                          id SERIAL PRIMARY KEY,
+                                          id UUID PRIMARY KEY,
                                           description TEXT,
                                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -133,7 +133,7 @@ CREATE TABLE bid_versions (
                               description TEXT,
                               status bid_status,
                               tender_id uuid REFERENCES tender(id),
-                              author_type authore_type,
+                              author_type author_type,
                               author_id uuid REFERENCES employee(id),
                               version INT,
                               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
