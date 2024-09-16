@@ -1,52 +1,38 @@
-drop table if exists organization_responsible;
+drop table if exists organization_responsible cascade;
 
-drop table if exists tender_versions;
+drop table if exists tender_versions cascade;
 
-drop table if exists bid_bidreview;
+drop table if exists bid_bidreview cascade;
 
-drop table if exists bid_review;
+drop table if exists bid_review cascade;
 
-drop table if exists bid_versions;
+drop table if exists bid_versions cascade;
 
-drop table if exists bid;
+drop table if exists decision cascade;
 
-drop table if exists employee;
+drop table if exists bid cascade;
 
-drop table if exists tender;
+drop table if exists employee cascade;
 
-drop table if exists organization;
+drop table if exists tender cascade;
 
+drop table if exists organization cascade;
 
-DROP TYPE IF EXISTS tender_status;
+drop function if exists save_tender_version() cascade;
 
-DROP TYPE IF EXISTS service_type;
+drop function if exists save_and_increment_tender_version() cascade;
 
-DROP TABLE IF EXISTS organization_responsible;
+drop function if exists save_and_increment_bid_version() cascade;
 
-DROP TABLE IF EXISTS employee;
+drop function if exists update_bid_status() cascade;
 
-DROP TABLE IF EXISTS bid;
+drop type if exists organization_type cascade;
 
-DROP TYPE IF EXISTS bid_status;
+drop type if exists service_type cascade;
 
-DROP TYPE IF EXISTS author_type;
+drop type if exists tender_status cascade;
 
-DROP TABLE IF EXISTS bid_review;
+drop type if exists bid_status cascade;
 
-DROP TABLE IF EXISTS organization;
+drop type if exists authore_type cascade;
 
-DROP TYPE IF EXISTS organization_type;
-
-DROP TABLE IF EXISTS tender_versions;
-
-DROP FUNCTION IF EXISTS save_and_increment_tender_version;
-
-DROP TRIGGER IF EXISTS tender_update_trigger ON tender;
-
-DROP TABLE IF EXISTS bid_bidReview;
-
-DROP TABLE IF EXISTS bid_versions;
-
-DROP FUNCTION IF EXISTS save_and_increment_bid_version;
-
-DROP TRIGGER IF EXISTS bid_update_trigger ON bid;
