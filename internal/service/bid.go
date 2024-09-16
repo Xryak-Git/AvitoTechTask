@@ -3,6 +3,7 @@ package service
 import (
 	"avitoTech/internal/entity"
 	"avitoTech/internal/repo"
+	"avitoTech/internal/repo/repoerrs"
 	"context"
 )
 
@@ -10,18 +11,47 @@ type BidService struct {
 	bidRepo         repo.Bid
 	userRepo        repo.User
 	responsibleRepo repo.Responsible
+	tenderRepo      repo.Tender
 }
 
-func NewBidService(bidRepo repo.Bid, userRepo repo.User, responsibleRepo repo.Responsible) *BidService {
+func NewBidService(bidRepo repo.Bid, userRepo repo.User, responsibleRepo repo.Responsible, tenderRepo repo.Tender) *BidService {
 	return &BidService{
 		bidRepo:         bidRepo,
 		userRepo:        userRepo,
 		responsibleRepo: responsibleRepo,
+		tenderRepo:      tenderRepo,
 	}
 }
 
-func (bs *BidService) CreateBid(i CreateBidInput) (entity.Bid, error) {
-	return bs.bidRepo.CreateBid(context.Background(), i.Name, i.Description, i.TenderId, i.AuthorType, i.AuthorId)
+func (bs *BidService) CreateBid(bi CreateBidInput) (entity.Bid, error) {
+
+	user, err := bs.userRepo.GetById(context.Background(), bi.AuthorId)
+	if err != nil {
+		return entity.Bid{}, err
+	}
+
+	isResponsibe, err := bs.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), user.Id, bi.TenderId)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return entity.Bid{}, ErrUserIsNotResposible
+		}
+		return entity.Bid{}, err
+	}
+	if !isResponsibe {
+		return entity.Bid{}, ErrUserIsNotResposible
+	}
+
+	exists, err := bs.tenderRepo.IsTenderExists(context.Background(), bi.TenderId)
+	if err != nil || !exists {
+		return entity.Bid{}, ErrTenderOrVersionNotFound
+	}
+
+	bid, err := bs.bidRepo.CreateBid(context.Background(), bi.Name, bi.Description, bi.TenderId, bi.AuthorType, bi.AuthorId)
+	if err != nil {
+		return entity.Bid{}, err
+	}
+
+	return bid, nil
 }
 
 func (bs *BidService) GetUserBids(ubp GetUserBidParams) ([]entity.Bid, error) {

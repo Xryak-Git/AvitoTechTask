@@ -33,6 +33,7 @@ type Bid interface {
 
 type User interface {
 	GetByName(ctx context.Context, username string) (entity.User, error)
+	GetById(ctx context.Context, userId string) (entity.User, error)
 }
 
 type Responsible interface {
