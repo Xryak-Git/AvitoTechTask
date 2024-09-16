@@ -29,6 +29,7 @@ type Bid interface {
 	CreateBidFeedback(ctx context.Context, feedback string, bidId string) error
 	GetBid(ctx context.Context, id string) (entity.Bid, error)
 	RollbackBidVersion(ctx context.Context, bidId string, version int) (entity.Bid, error)
+	IsBidExists(ctx context.Context, bidId string) (bool, error)
 }
 
 type User interface {
@@ -40,6 +41,7 @@ type Responsible interface {
 	GetAllResponsiblesByUserId(ctx context.Context, userId string) ([]entity.Responsible, error)
 	IsUserResponsibleForOrganizationByTenderId(ctx context.Context, userId, organizationId string) (bool, error)
 	IsUserResponsibleForOrganizationByOrganizationId(ctx context.Context, userId, organizationId string) (bool, error)
+	IsUserResponsibleForOrganizationByBidId(ctx context.Context, userId, bidId string) (bool, error)
 }
 
 type Repositories struct {

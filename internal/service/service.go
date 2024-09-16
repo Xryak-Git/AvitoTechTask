@@ -104,6 +104,6 @@ type Services struct {
 func NewServices(r *repo.Repositories) *Services {
 	return &Services{
 		Tender: NewTenderService(r.Tender, r.User, r.Responsible),
-		Bid:    NewBidService(r.Bid, r.User, r.Responsible),
+		Bid:    NewBidService(r.Bid, r.User, r.Responsible, r.Tender),
 	}
 }

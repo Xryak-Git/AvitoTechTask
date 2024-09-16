@@ -11,4 +11,5 @@ var (
 	ErrCannotGetTenderStatus   = fmt.Errorf("cannot get tender status")
 	ErrCannotCreateBid         = fmt.Errorf("cannot create bid")
 	ErrTenderOrVersionNotFound = fmt.Errorf("tender or version not found")
+	ErrBidOrVersionNotFound    = fmt.Errorf("bid or version not found")
 )

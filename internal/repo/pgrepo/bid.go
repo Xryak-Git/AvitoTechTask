@@ -353,3 +353,18 @@ func (r *BidRepo) RollbackBidVersion(ctx context.Context, bidId string, version 
 
 	return b, nil
 }
+
+func (r *BidRepo) IsBidExists(ctx context.Context, bidId string) (bool, error) {
+	const fn = "repo.pgrepo.bid.IsBidExists"
+
+	sql := `SELECT EXISTS (SELECT 1 FROM bid WHERE id = $1)`
+
+	var exists bool
+	err := r.Pool.QueryRow(ctx, sql, bidId).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	return exists, nil
+
+}

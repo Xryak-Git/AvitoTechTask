@@ -105,3 +105,15 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByTenderId(ctx context
 
 	return true, nil
 }
+
+func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByBidId(ctx context.Context, userId, bidId string) (bool, error) {
+	const fn = "repo.pgrepo.responsible.IsUserResponsibleForOrganizationByBidId"
+
+	sql := `
+
+	`
+	_ = sql
+
+	return true, nil
+
+}
