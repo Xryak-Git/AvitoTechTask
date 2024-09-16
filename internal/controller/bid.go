@@ -280,7 +280,7 @@ func (bc *BidController) RollbackBid(w http.ResponseWriter, r *http.Request) {
 			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		if err == service.ErrUserIsNotResposible {
+		if err == service.ErrUserIsNotResposible || err == service.ErrUserDoseNotMadeBidForTender {
 			ErrorResponse(w, err.Error(), http.StatusForbidden)
 			return
 		}
@@ -297,5 +297,31 @@ func (bc *BidController) RollbackBid(w http.ResponseWriter, r *http.Request) {
 }
 
 func (bc *BidController) GetBidReviews(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	params, err := DecodeFormParams[service.GetBidReviewsParams](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+	tenderId := chi.URLParam(r, "tenderId")
+
+	reviews, err := bc.BidService.GetBidReviews(*params, tenderId)
+	if err != nil {
+		log.Debug("RollbackBid err: ", err.Error())
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrTenderNotFound || err == service.ErrBidReviewsNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
+
+	SendJSONResponse(w, reviews)
 }

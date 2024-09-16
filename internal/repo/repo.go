@@ -30,6 +30,8 @@ type Bid interface {
 	GetBid(ctx context.Context, id string) (entity.Bid, error)
 	RollbackBidVersion(ctx context.Context, bidId string, version int) (entity.Bid, error)
 	IsBidExists(ctx context.Context, bidId string) (bool, error)
+	GetAuthorBidReviews(ctx context.Context, authorName string, limit int, offset int) ([]entity.BidReview, error)
+	IsUserMadeBid(ctx context.Context, userId, tenderId string) (bool, error)
 }
 
 type User interface {

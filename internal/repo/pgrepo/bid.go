@@ -368,3 +368,58 @@ func (r *BidRepo) IsBidExists(ctx context.Context, bidId string) (bool, error) {
 	return exists, nil
 
 }
+
+func (r *BidRepo) GetAuthorBidReviews(ctx context.Context, authorId string, limit int, offset int) ([]entity.BidReview, error) {
+	const fn = "repo.pgrepo.bid.GetAuthorBidReviews"
+
+	sql := `
+	select r.*
+	from bid b
+		join bid_bidreview br on b.id = br.bid_id
+		join bid_review r on br.bid_review_id = r.id
+	WHERE b.author_id = $1
+	LIMIT $2
+	OFFSET $3
+	`
+
+	rows, err := r.Pool.Query(ctx, sql, authorId, limit, offset)
+
+	if err != nil {
+		log.Debug("err: ", fn, err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return []entity.BidReview{}, repoerrs.ErrNotFound
+		}
+		return []entity.BidReview{}, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	defer rows.Close()
+
+	var reviews []entity.BidReview
+	for rows.Next() {
+		var r entity.BidReview
+		err := rows.Scan(
+			&r.Id,
+			&r.Description,
+			&r.CreatedAt,
+		)
+		if err != nil {
+			return []entity.BidReview{}, fmt.Errorf("%s: %v", fn, err)
+		}
+		reviews = append(reviews, r)
+	}
+
+	return reviews, nil
+}
+
+func (r *BidRepo) IsUserMadeBid(ctx context.Context, userId, tenderId string) (bool, error) {
+	sql := `
+	SELECT EXISTS (SELECT 1 FROM bid WHERE author_id = $1 AND tender_id = $2)
+	`
+
+	var exists bool
+	err := r.Pool.QueryRow(ctx, sql, userId, tenderId).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}

@@ -105,7 +105,6 @@ func (bs *BidService) GetBidsForTender(bftp GetBidsForTenderParams, tenderId str
 	return bids, err
 }
 
-// TODO: aDD IS RESPONSEL BY BID ID
 func (bs *BidService) GetBidStatus(u UserParam, bidId string) (string, error) {
 	user, err := bs.userRepo.GetByName(context.Background(), u.Username)
 	if err != nil {
@@ -258,4 +257,59 @@ func (bs *BidService) RollbackBid(up UserParam, bidId string, version int) (enti
 	}
 
 	return bid, err
+}
+
+func (bs *BidService) GetBidReviews(params GetBidReviewsParams, tenderId string) ([]entity.BidReview, error) {
+	responsible, err := bs.userRepo.GetByName(context.Background(), params.RequesterUsername)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return []entity.BidReview{}, ErrUserNotExists
+		}
+		return []entity.BidReview{}, err
+	}
+
+	isResponsible, err := bs.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), responsible.Id, tenderId)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return []entity.BidReview{}, ErrUserIsNotResposible
+		}
+		return []entity.BidReview{}, err
+	}
+	if !isResponsible {
+		return []entity.BidReview{}, ErrUserIsNotResposible
+	}
+
+	exists, err := bs.tenderRepo.IsTenderExists(context.Background(), tenderId)
+	if err != nil || !exists {
+		return []entity.BidReview{}, ErrTenderNotFound
+	}
+
+	author, err := bs.userRepo.GetByName(context.Background(), params.AuthorUsername)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return []entity.BidReview{}, ErrUserNotExists
+		}
+		return []entity.BidReview{}, err
+	}
+
+	isUserMadeBid, err := bs.bidRepo.IsUserMadeBid(context.Background(), author.Id, tenderId)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return []entity.BidReview{}, ErrUserDoseNotMadeBidForTender
+		}
+		return []entity.BidReview{}, err
+	}
+	if !isUserMadeBid {
+		return []entity.BidReview{}, ErrUserDoseNotMadeBidForTender
+	}
+
+	reviews, err := bs.bidRepo.GetAuthorBidReviews(context.Background(), author.Id, params.Limit, params.Offset)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return []entity.BidReview{}, ErrBidReviewsNotFound
+		}
+		return []entity.BidReview{}, err
+	}
+
+	return reviews, nil
 }
