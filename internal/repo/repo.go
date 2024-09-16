@@ -16,6 +16,7 @@ type Tender interface {
 	UpdateTenderStatus(ctx context.Context, tenderId, status string) (entity.Tender, error)
 	RollbackTenderVersion(ctx context.Context, tenderId string, version int) error
 	GetTenderById(ctx context.Context, tenderId string) (entity.Tender, error)
+	IsTenderExists(ctx context.Context, tenderId string) (bool, error)
 }
 
 type Bid interface {

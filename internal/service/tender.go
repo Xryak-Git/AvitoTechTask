@@ -121,18 +121,29 @@ func (ts *TenderService) EditTender(up UserParam, tenderId string, params map[st
 		return entity.Tender{}, err
 	}
 
-	isResponsibe, err := ts.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), user.Id, tenderId)
+	exists, err := ts.tenderRepo.IsTenderExists(context.Background(), tenderId)
+	if err != nil {
+		return entity.Tender{}, err
+	}
+
+	if !exists {
+		return entity.Tender{}, ErrTenderNotFound
+	}
+
+	_, err = ts.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), user.Id, tenderId)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return entity.Tender{}, ErrUserIsNotResposible
 		}
 		return entity.Tender{}, err
 	}
-	if !isResponsibe {
-		return entity.Tender{}, ErrUserIsNotResposible
+
+	tender, err := ts.tenderRepo.UpdateTender(context.Background(), tenderId, params)
+	if err != nil {
+		return entity.Tender{}, err
 	}
 
-	return ts.tenderRepo.UpdateTender(context.Background(), tenderId, params)
+	return tender, nil
 }
 
 func (ts *TenderService) UpdateTenderStatus(utsp UpdateTenderStatusParams, tenderId string) (entity.Tender, error) {

@@ -195,11 +195,21 @@ func (r *TenderRepo) UpdateTender(ctx context.Context, tenderId string, params m
 		Update("tender").
 		SetMap(params).
 		Where("id = ?", tenderId).
-		Suffix("RETURNING id").
+		Suffix("RETURNING id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at").
 		ToSql()
 
-	var id string
-	err := r.Pool.QueryRow(ctx, sql, args...).Scan(&id)
+	var t entity.Tender
+	err := r.Pool.QueryRow(ctx, sql, args...).Scan(
+		&t.Id,
+		&t.Name,
+		&t.Description,
+		&t.ServiceType,
+		&t.Status,
+		&t.OrganizationId,
+		&t.Version,
+		&t.CreatedAt,
+	)
+
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return entity.Tender{}, repoerrs.ErrNotFound
@@ -208,7 +218,7 @@ func (r *TenderRepo) UpdateTender(ctx context.Context, tenderId string, params m
 		return entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
 	}
 
-	return r.GetTenderById(ctx, id)
+	return t, nil
 
 }
 
@@ -322,4 +332,18 @@ func (r *TenderRepo) RollbackTenderVersion(ctx context.Context, tenderId string,
 	}
 
 	return err
+}
+
+func (r *TenderRepo) IsTenderExists(ctx context.Context, tenderId string) (bool, error) {
+	const fn = "repo.pgrepo.tender.CheckTenderExists"
+
+	sql := `SELECT EXISTS (SELECT 1 FROM tender WHERE id = $1)`
+
+	var exists bool
+	err := r.Pool.QueryRow(ctx, sql, tenderId).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	return exists, nil
 }

@@ -95,7 +95,6 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByTenderId(ctx context
 
 	var id string
 	err := r.Pool.QueryRow(ctx, sql, tenderId, userId).Scan(&id)
-	fmt.Println(err)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
