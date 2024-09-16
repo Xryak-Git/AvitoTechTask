@@ -94,7 +94,15 @@ func (bs *BidService) GetBidsForTender(bftp GetBidsForTenderParams, tenderId str
 		return []entity.Bid{}, ErrTenderNotFound
 	}
 
-	return bs.bidRepo.GetBidsForTender(context.Background(), tenderId, bftp.Limit, bftp.Offset)
+	bids, err := bs.bidRepo.GetBidsForTender(context.Background(), tenderId, bftp.Limit, bftp.Offset)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return []entity.Bid{}, ErrBidNotFound
+		}
+		return []entity.Bid{}, err
+	}
+
+	return bids, err
 }
 
 // TODO: aDD IS RESPONSEL BY BID ID

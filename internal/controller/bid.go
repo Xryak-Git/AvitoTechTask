@@ -30,17 +30,24 @@ func (bc *BidController) CreateBid(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bid, err := bc.BidService.CreateBid(*bi)
-	log.Debug("CreateBid err: ", err)
 
-	//if err != nil {
-	//	if err == service.ErrUserIsNotResposible || err == service.ErrUserNotExists {
-	//		ErrorResponse(w, err.Error(), http.StatusBadRequest)
-	//		return
-	//	}
-	//	log.Debug("err: ", err.Error())
-	//	ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
-	//	return
-	//}
+	if err != nil {
+		log.Debug("CreateBid err: ", err.Error())
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrTenderNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
 
 	SendJSONResponse(w, bid)
 }
@@ -53,7 +60,16 @@ func (bc *BidController) GetUserBids(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bids, err := bc.BidService.GetUserBids(*ubp)
-	log.Debug("GetUserBids err: ", err)
+	log.Debug("GetUserBids err: ", err.Error())
+
+	if err != nil {
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
 
 	SendJSONResponse(w, bids)
 }
@@ -67,7 +83,23 @@ func (bc *BidController) GetBidsForTender(w http.ResponseWriter, r *http.Request
 	tenderId := chi.URLParam(r, "tenderId")
 
 	bids, err := bc.BidService.GetBidsForTender(*bftp, tenderId)
-	log.Debug("GetBidsForTender err: ", err)
+	if err != nil {
+		log.Debug("GetBidsForTender err: ", err.Error())
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrTenderNotFound || err == service.ErrBidNotFound {
+			ErrorResponse(w, "tender or bid was not found", http.StatusNotFound)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
 
 	SendJSONResponse(w, bids)
 }
@@ -81,7 +113,23 @@ func (bc *BidController) GetBidStatus(w http.ResponseWriter, r *http.Request) {
 	bidId := chi.URLParam(r, "bidId")
 
 	status, err := bc.BidService.GetBidStatus(*u, bidId)
-	log.Debug("GetBidStatus err: ", err)
+	if err != nil {
+		log.Debug("GetBidStatus err: ", err.Error())
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrBidNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
 
 	SendJSONResponse(w, status)
 }
@@ -95,7 +143,23 @@ func (bc *BidController) UpdateBidStatus(w http.ResponseWriter, r *http.Request)
 	bidId := chi.URLParam(r, "bidId")
 
 	bid, err := bc.BidService.UpdateBidStatus(*bs, bidId)
-	log.Debug("GetBidsForTender err: ", err)
+	if err != nil {
+		log.Debug("UpdateBidStatus err: ", err.Error())
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrBidNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
 
 	SendJSONResponse(w, bid)
 
@@ -138,7 +202,23 @@ func (bc *BidController) EditBid(w http.ResponseWriter, r *http.Request) {
 	bidId := chi.URLParam(r, "bidId")
 
 	bid, err := bc.BidService.EditBid(*u, bidId, params)
-	log.Debug("GetBidsForTender err: ", err)
+	if err != nil {
+		log.Debug("EditBid err: ", err.Error())
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrBidNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
 
 	SendJSONResponse(w, bid)
 
@@ -157,7 +237,23 @@ func (bc *BidController) SubmitBidFeedback(w http.ResponseWriter, r *http.Reques
 	bidId := chi.URLParam(r, "bidId")
 
 	bid, err := bc.BidService.SubmitBidFeedback(*bf, bidId)
-	log.Debug("GetBidsForTender err: ", err)
+	if err != nil {
+		log.Debug("SubmitBidDecision err: ", err.Error())
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrBidNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
 
 	SendJSONResponse(w, bid)
 }
@@ -178,6 +274,23 @@ func (bc *BidController) RollbackBid(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bid, err := bc.BidService.RollbackBid(*u, bidId, versionInt)
+	if err != nil {
+		log.Debug("RollbackBid err: ", err.Error())
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrBidOrVersionNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
 
 	SendJSONResponse(w, bid)
 
