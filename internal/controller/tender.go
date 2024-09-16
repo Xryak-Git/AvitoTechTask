@@ -127,7 +127,7 @@ func (tc *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Reque
 }
 
 func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
-	//TODO: implement me fully
+
 	u, err := DecodeFormParams[service.UserParam](r)
 	if err != nil {
 		HandleRequestError(w, err)
@@ -187,7 +187,6 @@ func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// TODO: ADd responsible check implement fully
 func (tc *TenderController) RollbackTender(w http.ResponseWriter, r *http.Request) {
 
 	u, err := DecodeFormParams[service.UserParam](r)
@@ -205,6 +204,24 @@ func (tc *TenderController) RollbackTender(w http.ResponseWriter, r *http.Reques
 	}
 
 	tender, err := tc.tenderService.RollbackTender(*u, tenderId, versionInt)
+
+	if err != nil {
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrTenderOrVersionNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		log.Debug("err: ", err.Error())
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
 
 	SendJSONResponse(w, tender)
 

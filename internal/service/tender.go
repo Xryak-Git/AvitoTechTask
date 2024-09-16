@@ -71,7 +71,15 @@ func (ts *TenderService) GetUserTenders(gutp GetUserTendersParams) ([]entity.Ten
 		return []entity.Tender{}, err
 	}
 
-	return ts.tenderRepo.GetUserTenders(context.Background(), gutp.Username, gutp.Limit, gutp.Offset)
+	tenders, err := ts.tenderRepo.GetUserTenders(context.Background(), gutp.Username, gutp.Limit, gutp.Offset)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return []entity.Tender{}, ErrTendersNotFound
+		}
+		return []entity.Tender{}, err
+	}
+
+	return tenders, nil
 }
 
 func (ts *TenderService) GetTenderStatus(u UserParam, tenderId string) (string, error) {
@@ -146,7 +154,7 @@ func (ts *TenderService) EditTender(up UserParam, tenderId string, params map[st
 
 func (ts *TenderService) UpdateTenderStatus(utsp UpdateTenderStatusParams, tenderId string) (entity.Tender, error) {
 
-	_, err := ts.userRepo.GetByName(context.Background(), utsp.Username)
+	user, err := ts.userRepo.GetByName(context.Background(), utsp.Username)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return entity.Tender{}, ErrUserNotExists
@@ -159,7 +167,7 @@ func (ts *TenderService) UpdateTenderStatus(utsp UpdateTenderStatusParams, tende
 		return entity.Tender{}, ErrTenderNotFound
 	}
 
-	isResponsibe, err := ts.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), utsp.Username, tenderId)
+	isResponsibe, err := ts.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), user.Id, tenderId)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return entity.Tender{}, ErrUserIsNotResposible
@@ -181,40 +189,40 @@ func (ts *TenderService) UpdateTenderStatus(utsp UpdateTenderStatusParams, tende
 
 }
 
-// TODO: ADd responsible check
 func (ts *TenderService) RollbackTender(u UserParam, tenderId string, version int) (entity.Tender, error) {
-	_ = u
+	user, err := ts.userRepo.GetByName(context.Background(), u.Username)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return entity.Tender{}, ErrUserNotExists
+		}
+		return entity.Tender{}, err
+	}
+
+	isResponsibe, err := ts.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), user.Id, tenderId)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return entity.Tender{}, ErrUserIsNotResposible
+		}
+		return entity.Tender{}, err
+	}
+	if !isResponsibe {
+		return entity.Tender{}, ErrUserIsNotResposible
+	}
 
 	exists, err := ts.tenderRepo.IsTenderExists(context.Background(), tenderId)
 	if err != nil || !exists {
-		return entity.Tender{}, ErrTenderNotFound
+		return entity.Tender{}, ErrTenderOrVersionNotFound
 	}
 
 	tender, err := ts.tenderRepo.RollbackTenderVersion(context.Background(), tenderId, version)
 
 	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return entity.Tender{}, ErrTenderOrVersionNotFound
+		}
 		return entity.Tender{}, err
 	}
 
 	return tender, nil
 
 }
-
-//// Получить тендеры пользователя
-//// (GET /tenders/my)
-//GetUserTenders(w http.ResponseWriter, r *http.Request, params GetUserTendersParams)
-//// Создание нового тендера
-//// (POST /tenders/new)
-//
-//// Редактирование тендера
-//// (PATCH /tenders/{tenderId}/edit)
-//EditTender(w http.ResponseWriter, r *http.Request, tenderId TenderId, params EditTenderParams)
-//// Откат версии тендера
-//// (PUT /tenders/{tenderId}/rollback/{version})
-//RollbackTender(w http.ResponseWriter, r *http.Request, tenderId TenderId, version int32, params RollbackTenderParams)
-//// Получение текущего статуса тендера
-//// (GET /tenders/{tenderId}/status)
-//GetTenderStatus(w http.ResponseWriter, r *http.Request, tenderId TenderId, params UserParam)
-//// Изменение статуса тендера
-//// (PUT /tenders/{tenderId}/status)
-//UpdateTenderStatus(w http.ResponseWriter, r *http.Request, tenderId TenderId, params UpdateTenderStatusParams)
