@@ -112,8 +112,8 @@ func (ts *TenderService) GetTenderStatus(u UserParam, tenderId string) (string, 
 
 }
 
-func (ts *TenderService) EditTender(u UserParam, tenderId string, params map[string]interface{}) (entity.Tender, error) {
-	_, err := ts.userRepo.GetByName(context.Background(), u.Username)
+func (ts *TenderService) EditTender(up UserParam, tenderId string, params map[string]interface{}) (entity.Tender, error) {
+	user, err := ts.userRepo.GetByName(context.Background(), up.Username)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return entity.Tender{}, ErrUserNotExists
@@ -121,7 +121,7 @@ func (ts *TenderService) EditTender(u UserParam, tenderId string, params map[str
 		return entity.Tender{}, err
 	}
 
-	isResponsibe, err := ts.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), u.Username, tenderId)
+	isResponsibe, err := ts.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), user.Id, tenderId)
 	if err != nil {
 		if err == repoerrs.ErrNotFound {
 			return entity.Tender{}, ErrUserIsNotResposible

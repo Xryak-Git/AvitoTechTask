@@ -65,6 +65,11 @@ type GetBidsForTenderParams struct {
 	UserParam
 }
 
+type UpdateBidStatusParams struct {
+	UserParam
+	Status string `json:"status" validate:"required"`
+}
+
 type Tender interface {
 	CreateTender(input CreateTenderInput) (entity.Tender, error)
 	GetTenders(gtp GetTendersParams) ([]entity.Tender, error)
@@ -80,6 +85,7 @@ type Bid interface {
 	GetUserBids(params GetUserBidParams) ([]entity.Bid, error)
 	GetBidsForTender(params GetBidsForTenderParams, tenderId string) ([]entity.Bid, error)
 	GetBidStatus(param UserParam, bidId string) (string, error)
+	UpdateBidStatus(params UpdateBidStatusParams, bidId string) (entity.Bid, error)
 }
 
 type Services struct {

@@ -12,14 +12,6 @@ type BidService struct {
 	responsibleRepo repo.Responsible
 }
 
-func (bs BidService) GetBidStatus(u UserParam, bidId string) (string, error) {
-	_ = u
-
-	status, err := bs.bidRepo.GetBidStatus(context.Background(), bidId)
-
-	return status, err
-}
-
 func NewBidService(bidRepo repo.Bid, userRepo repo.User, responsibleRepo repo.Responsible) *BidService {
 	return &BidService{
 		bidRepo:         bidRepo,
@@ -28,14 +20,27 @@ func NewBidService(bidRepo repo.Bid, userRepo repo.User, responsibleRepo repo.Re
 	}
 }
 
-func (bs BidService) CreateBid(i CreateBidInput) (entity.Bid, error) {
+func (bs *BidService) CreateBid(i CreateBidInput) (entity.Bid, error) {
 	return bs.bidRepo.CreateBid(context.Background(), i.Name, i.Description, i.TenderId, i.AuthorType, i.AuthorId)
 }
 
-func (bs BidService) GetUserBids(ubp GetUserBidParams) ([]entity.Bid, error) {
+func (bs *BidService) GetUserBids(ubp GetUserBidParams) ([]entity.Bid, error) {
 	return bs.bidRepo.GetUserBids(context.Background(), ubp.Username, ubp.Limit, ubp.Offset)
 }
 
-func (bs BidService) GetBidsForTender(bftp GetBidsForTenderParams, tenderId string) ([]entity.Bid, error) {
+func (bs *BidService) GetBidsForTender(bftp GetBidsForTenderParams, tenderId string) ([]entity.Bid, error) {
 	return bs.bidRepo.GetBidsForTender(context.Background(), tenderId, bftp.Limit, bftp.Offset)
+}
+
+func (bs *BidService) UpdateBidStatus(params UpdateBidStatusParams, bidId string) (entity.Bid, error) {
+
+	return bs.bidRepo.UpdateBidStatus(context.Background(), params.Status, bidId)
+}
+
+func (bs *BidService) GetBidStatus(u UserParam, bidId string) (string, error) {
+	_ = u
+
+	status, err := bs.bidRepo.GetBidStatus(context.Background(), bidId)
+
+	return status, err
 }

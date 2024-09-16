@@ -23,6 +23,7 @@ type Bid interface {
 	GetUserBids(ctx context.Context, username string, limit int, offset int) ([]entity.Bid, error)
 	GetBidsForTender(ctx context.Context, tenderId string, limit int, offset int) ([]entity.Bid, error)
 	GetBidStatus(ctx context.Context, bidId string) (string, error)
+	UpdateBidStatus(ctx context.Context, status string, bidId string) (entity.Bid, error)
 }
 
 type User interface {
