@@ -12,6 +12,14 @@ type BidService struct {
 	responsibleRepo repo.Responsible
 }
 
+func (bs BidService) GetBidStatus(u UserParam, bidId string) (string, error) {
+	_ = u
+
+	status, err := bs.bidRepo.GetBidStatus(context.Background(), bidId)
+
+	return status, err
+}
+
 func NewBidService(bidRepo repo.Bid, userRepo repo.User, responsibleRepo repo.Responsible) *BidService {
 	return &BidService{
 		bidRepo:         bidRepo,

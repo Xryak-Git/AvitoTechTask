@@ -60,17 +60,26 @@ func (bc *BidController) GetBidsForTender(w http.ResponseWriter, r *http.Request
 		HandleRequestError(w, err)
 		return
 	}
-
 	tenderId := chi.URLParam(r, "tenderId")
 
 	bids, err := bc.BidService.GetBidsForTender(*bftp, tenderId)
-	log.Debug("GetUserBids err: ", err)
+	log.Debug("GetBidsForTender err: ", err)
 
 	SendJSONResponse(w, bids)
 }
 
 func (bc *BidController) GetBidStatus(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	u, err := DecodeFormParams[service.UserParam](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+	bidId := chi.URLParam(r, "bidId")
+
+	status, err := bc.BidService.GetBidStatus(*u, bidId)
+	log.Debug("GetBidStatus err: ", err)
+
+	SendJSONResponse(w, status)
 }
 
 func (bc *BidController) UpdateBidStatus(w http.ResponseWriter, r *http.Request) {

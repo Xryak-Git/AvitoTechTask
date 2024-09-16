@@ -48,7 +48,7 @@ func (r *BidRepo) GetUserBids(ctx context.Context, username string, limit int, o
 	const fn = "repo.pgrepo.bid.GetUserBids"
 
 	sql := `
-	SELECT b.*
+	SELECT b.id, b.name, b.description, INITCAP(b.status::text), b.tender_id, INITCAP(b.author_type::text), b.author_id, b.version, b.created_at
 	FROM bid b
 			 JOIN employee e ON b.author_id = e.id
 	WHERE e.username = $1
@@ -95,7 +95,7 @@ func (r *BidRepo) GetBidsForTender(ctx context.Context, tenderId string, limit i
 	const fn = "repo.pgrepo.bid.GetBidsForTender"
 
 	sql := `
-	SELECT b.*
+	SELECT b.id, b.name, b.description, INITCAP(b.status::text), b.tender_id, INITCAP(b.author_type::text), b.author_id, b.version, b.created_at
 	FROM bid b
 	WHERE tender_id = $1
 	LIMIT $2
@@ -135,4 +135,27 @@ func (r *BidRepo) GetBidsForTender(ctx context.Context, tenderId string, limit i
 	}
 	return bids, nil
 
+}
+
+func (r *BidRepo) GetBidStatus(ctx context.Context, bidId string) (string, error) {
+	const fn = "repo.pgrepo.bid.GetBidStatus"
+
+	sql := `
+	SELECT INITCAP(status::text) as status
+	FROM bid
+	WHERE id = $1
+	`
+
+	var status string
+	err := r.Pool.QueryRow(ctx, sql, bidId).Scan(&status)
+
+	if err != nil {
+		log.Debug("err: ", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", repoerrs.ErrNotFound
+		}
+		return "", fmt.Errorf("%s: %v", fn, err)
+	}
+
+	return status, nil
 }
