@@ -16,19 +16,16 @@ func NewBidController(bidService service.Bid) BidController {
 	}
 }
 
-func (bc *BidController) GetUserBids(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
-}
-
 func (bc *BidController) CreateBid(w http.ResponseWriter, r *http.Request) {
 
-	b, err := ParseJSONBody[service.CreateBidInput](r, w)
+	bi, err := ParseJSONBody[service.CreateBidInput](r, w)
 	if err != nil {
 		HandleRequestError(w, err)
 		return
 	}
 
-	bid, err := bc.BidService.CreateBid(*b)
+	bid, err := bc.BidService.CreateBid(*bi)
+	log.Debug("CreateBid err: ", err)
 
 	if err != nil {
 		if err == service.ErrUserIsNotResposible || err == service.ErrUserNotExists {
@@ -43,15 +40,20 @@ func (bc *BidController) CreateBid(w http.ResponseWriter, r *http.Request) {
 	SendJSONResponse(w, bid)
 }
 
-func (bc *BidController) EditBid(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+func (bc *BidController) GetUserBids(w http.ResponseWriter, r *http.Request) {
+	bp, err := ParseJSONBody[service.GetUserBidParams](r, w)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	bids, err := bc.BidService.GetUserBids(*bp)
+	log.Debug("GetUserBids err: ", err)
+
+	SendJSONResponse(w, bids)
 }
 
-func (bc *BidController) SubmitBidFeedback(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
-}
-
-func (bc *BidController) RollbackBid(w http.ResponseWriter, r *http.Request) {
+func (bc *BidController) GetBidsForTender(w http.ResponseWriter, r *http.Request) {
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 
@@ -63,11 +65,19 @@ func (bc *BidController) UpdateBidStatus(w http.ResponseWriter, r *http.Request)
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 
+func (bc *BidController) EditBid(w http.ResponseWriter, r *http.Request) {
+	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+}
+
 func (bc *BidController) SubmitBidDecision(w http.ResponseWriter, r *http.Request) {
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 
-func (bc *BidController) GetBidsForTender(w http.ResponseWriter, r *http.Request) {
+func (bc *BidController) SubmitBidFeedback(w http.ResponseWriter, r *http.Request) {
+	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+}
+
+func (bc *BidController) RollbackBid(w http.ResponseWriter, r *http.Request) {
 	ErrorResponse(w, "not implemented", http.StatusBadRequest)
 }
 

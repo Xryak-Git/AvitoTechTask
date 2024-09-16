@@ -49,10 +49,15 @@ type UpdateTenderStatusParams struct {
 
 type CreateBidInput struct {
 	Name        string `json:"name" validate:"required,alpha"`
-	Description string `json:"description" validate:"required,alpha"`
-	TenderId    string `json:"tenderId" validate:"required,alpha"`
+	Description string `json:"description" validate:"required"`
+	TenderId    string `json:"tenderId" validate:"required"`
 	AuthorType  string `json:"authorType" validate:"required,alpha"`
-	AuthorId    string `json:"authorId" validate:"required,alpha"`
+	AuthorId    string `json:"authorId" validate:"required"`
+}
+
+type GetUserBidParams struct {
+	GetParams
+	Username string `schema:"username" validate:"required,alpha"`
 }
 
 type Tender interface {
@@ -67,6 +72,7 @@ type Tender interface {
 
 type Bid interface {
 	CreateBid(input CreateBidInput) (entity.Bid, error)
+	GetUserBids(params GetUserBidParams) ([]entity.Bid, error)
 }
 
 type Services struct {

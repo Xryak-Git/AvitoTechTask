@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	log "log/slog"
 )
 
@@ -43,17 +42,11 @@ func (r *TenderRepo) CreateTender(ctx context.Context, name, description, servic
 	)
 
 	if err != nil {
-		log.Info("err: ", err)
-		var pgErr *pgconn.PgError
-		if ok := errors.As(err, &pgErr); ok {
-			if pgErr.Code == "23505" {
-				return t, repoerrs.ErrAlreadyExists
-			}
-		}
-		return t, fmt.Errorf("%s: %v", fn, err)
+		log.Debug("err: ", err)
+		return entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
 	}
 
-	log.Debug("CreateTender tender: ", "tender", t)
+	log.Info("CreateTender tender: ", "tender", t)
 
 	return t, nil
 
@@ -194,7 +187,7 @@ func (r *TenderRepo) GetTenderStatus(ctx context.Context, tenderId string) (stri
 }
 
 func (r *TenderRepo) UpdateTender(ctx context.Context, tenderId string, params map[string]interface{}) (entity.Tender, error) {
-	const fn = "repo.pgrepo.tender.VersionedTender"
+	const fn = "repo.pgrepo.tender.UpdateTender"
 
 	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
@@ -212,18 +205,7 @@ func (r *TenderRepo) UpdateTender(ctx context.Context, tenderId string, params m
 			return entity.Tender{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", err.Error())
-		return entity.Tender{}, err
-	}
-
-	sql = `
-		UPDATE tender
-		SET version = version + 1
-		WHERE id = $1
-		`
-	_, err = r.Pool.Exec(ctx, sql, id)
-	if err != nil {
-		log.Debug("err: ", err.Error())
-		return entity.Tender{}, err
+		return entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
 	}
 
 	return r.GetTenderById(ctx, id)

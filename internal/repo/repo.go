@@ -19,6 +19,7 @@ type Tender interface {
 }
 
 type Bid interface {
+	CreateBid(ctx context.Context, name string, description string, tenderId string, authorType string, authorId string) (entity.Bid, error)
 }
 
 type User interface {
@@ -43,5 +44,6 @@ func NewRepos(pg *postgres.Postgres) *Repositories {
 		Tender:      pgrepo.NewTenderRepo(pg),
 		User:        pgrepo.NewUserRepo(pg),
 		Responsible: pgrepo.NewResponsibleRepo(pg),
+		Bid:         pgrepo.NewBidRepo(pg),
 	}
 }
