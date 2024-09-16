@@ -313,3 +313,14 @@ func (bs *BidService) GetBidReviews(params GetBidReviewsParams, tenderId string)
 
 	return reviews, nil
 }
+
+func (bs *BidService) SubmitBidDecision(params SubmitBidDecisionParams, bidId string) (entity.Bid, error) {
+	user, _ := bs.userRepo.GetByName(context.Background(), params.Username)
+
+	err := bs.bidRepo.SubmitBidDecision(context.Background(), user.Id, bidId, params.Decision)
+	if err != nil {
+		return entity.Bid{}, err
+	}
+
+	return bs.bidRepo.GetBid(context.Background(), bidId)
+}

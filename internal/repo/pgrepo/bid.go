@@ -169,7 +169,7 @@ func (r *BidRepo) UpdateBidStatus(ctx context.Context, status string, bidId stri
 	UPDATE bid
 	SET status = UPPER($1)::bid_status
 	WHERE id = $2
-	RETURNING id, name, description, status, tender_id, INITCAP(author_type::text), author_id, version, created_at
+	RETURNING id, name, description, INITCAP(status::text), tender_id, INITCAP(author_type::text), author_id, version, created_at
 	`
 
 	var b entity.Bid
@@ -205,7 +205,7 @@ func (r *BidRepo) EditBid(ctx context.Context, bidId string, params map[string]i
 		Update("bid").
 		SetMap(params).
 		Where("id = ?", bidId).
-		Suffix("RETURNING id, name, description, status, tender_id, INITCAP(author_type::text), author_id, version, created_at").
+		Suffix("RETURNING id, name, description, INITCAP(status::text), tender_id, INITCAP(author_type::text), author_id, version, created_at").
 		ToSql()
 
 	var b entity.Bid
@@ -270,7 +270,7 @@ func (r *BidRepo) GetBid(ctx context.Context, id string) (entity.Bid, error) {
 	const fn = "repo.pgrepo.bid.GetBid"
 
 	sql := `
-	SELECT id, name, description, status, tender_id, INITCAP(author_type::text), author_id, version, created_at
+	SELECT id, name, description, INITCAP(status::text), tender_id, INITCAP(author_type::text), author_id, version, created_at
 	FROM bid
 	WHERE id = $1
 	`
@@ -422,4 +422,17 @@ func (r *BidRepo) IsUserMadeBid(ctx context.Context, userId, tenderId string) (b
 		return false, err
 	}
 	return exists, nil
+}
+
+func (r *BidRepo) SubmitBidDecision(ctx context.Context, userId, bidId string, decision string) error {
+	sql := `
+	INSERT INTO decision
+	(bid_id, user_id, decision_type)
+	VALUES 
+	($1, $2, UPPER($3)::bid_status)
+	`
+
+	_, err := r.Pool.Exec(ctx, sql, bidId, userId, decision)
+
+	return err
 }

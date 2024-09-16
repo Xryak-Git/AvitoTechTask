@@ -32,6 +32,7 @@ type Bid interface {
 	IsBidExists(ctx context.Context, bidId string) (bool, error)
 	GetAuthorBidReviews(ctx context.Context, authorName string, limit int, offset int) ([]entity.BidReview, error)
 	IsUserMadeBid(ctx context.Context, userId, tenderId string) (bool, error)
+	SubmitBidDecision(ctx context.Context, userId, bidId string, decision string) error
 }
 
 type User interface {

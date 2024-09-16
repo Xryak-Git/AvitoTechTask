@@ -224,10 +224,6 @@ func (bc *BidController) EditBid(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (bc *BidController) SubmitBidDecision(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
-}
-
 func (bc *BidController) SubmitBidFeedback(w http.ResponseWriter, r *http.Request) {
 	bf, err := DecodeFormParams[service.SubmitBidFeedbackParams](r)
 	if err != nil {
@@ -324,4 +320,35 @@ func (bc *BidController) GetBidReviews(w http.ResponseWriter, r *http.Request) {
 	}
 
 	SendJSONResponse(w, reviews)
+}
+
+// TODO: implement
+func (bc *BidController) SubmitBidDecision(w http.ResponseWriter, r *http.Request) {
+	params, err := DecodeFormParams[service.SubmitBidDecisionParams](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+	bidId := chi.URLParam(r, "bidId")
+
+	bid, err := bc.BidService.SubmitBidDecision(*params, bidId)
+	if err != nil {
+		log.Debug("SubmitBidDecision err: ", err.Error())
+		if err == service.ErrUserNotExists {
+			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if err == service.ErrUserIsNotResposible {
+			ErrorResponse(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if err == service.ErrBidNotFound {
+			ErrorResponse(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		return
+	}
+
+	SendJSONResponse(w, bid)
 }

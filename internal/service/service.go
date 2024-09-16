@@ -81,6 +81,11 @@ type GetBidReviewsParams struct {
 	RequesterUsername string `schema:"requesterUsername" validate:"required"`
 }
 
+type SubmitBidDecisionParams struct {
+	UserParam
+	Decision string `json:"decision" validate:"required"`
+}
+
 type Tender interface {
 	CreateTender(input CreateTenderInput) (entity.Tender, error)
 	GetTenders(gtp GetTendersParams) ([]entity.Tender, error)
@@ -101,6 +106,7 @@ type Bid interface {
 	SubmitBidFeedback(params SubmitBidFeedbackParams, bidId string) (entity.Bid, error)
 	RollbackBid(param UserParam, bidId string, version int) (entity.Bid, error)
 	GetBidReviews(params GetBidReviewsParams, tenderId string) ([]entity.BidReview, error)
+	SubmitBidDecision(params SubmitBidDecisionParams, bidId string) (entity.Bid, error)
 }
 
 type Services struct {
