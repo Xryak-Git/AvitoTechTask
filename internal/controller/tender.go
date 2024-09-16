@@ -152,6 +152,10 @@ func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 		delete(params, "serviceType")
 	}
 
+	if val, ok := params["status"]; ok {
+		params["status"] = strings.ToUpper(val.(string))
+	}
+
 	if val, ok := params["organizationId"]; ok {
 		params["organization_id"] = val.(string)
 		delete(params, "serviceType")

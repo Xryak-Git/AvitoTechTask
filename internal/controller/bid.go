@@ -2,9 +2,12 @@ package controller
 
 import (
 	"avitoTech/internal/service"
+	"encoding/json"
 	"github.com/go-chi/chi/v5"
+	"io"
 	log "log/slog"
 	"net/http"
+	"strings"
 )
 
 type BidController struct {
@@ -98,7 +101,46 @@ func (bc *BidController) UpdateBidStatus(w http.ResponseWriter, r *http.Request)
 }
 
 func (bc *BidController) EditBid(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	u, err := DecodeFormParams[service.UserParam](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	params := make(map[string]interface{})
+	err = json.Unmarshal(body, &params)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	if val, ok := params["status"]; ok {
+		params["status"] = strings.ToUpper(val.(string))
+	}
+
+	if val, ok := params["authorType"]; ok {
+		params["author_type"] = strings.ToUpper(val.(string))
+		delete(params, "authorType")
+	}
+
+	if val, ok := params["authorId"]; ok {
+		params["author_id"] = val.(string)
+		delete(params, "authorId")
+	}
+
+	bidId := chi.URLParam(r, "bidId")
+
+	bid, err := bc.BidService.EditBid(*u, bidId, params)
+	log.Debug("GetBidsForTender err: ", err)
+
+	SendJSONResponse(w, bid)
+
 }
 
 func (bc *BidController) SubmitBidDecision(w http.ResponseWriter, r *http.Request) {

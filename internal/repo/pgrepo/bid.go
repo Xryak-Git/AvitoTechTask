@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	log "log/slog"
 )
@@ -193,4 +194,40 @@ func (r *BidRepo) UpdateBidStatus(ctx context.Context, status string, bidId stri
 
 	return b, nil
 
+}
+
+func (r *BidRepo) EditBid(ctx context.Context, bidId string, params map[string]interface{}) (entity.Bid, error) {
+	const fn = "repo.pgrepo.bid.EditBid"
+
+	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+
+	sql, args, _ := builder.
+		Update("bid").
+		SetMap(params).
+		Where("id = ?", bidId).
+		Suffix("RETURNING id, name, description, status, tender_id, INITCAP(author_type::text), author_id, version, created_at").
+		ToSql()
+
+	var b entity.Bid
+	err := r.Pool.QueryRow(ctx, sql, args...).Scan(
+		&b.Id,
+		&b.Name,
+		&b.Description,
+		&b.Status,
+		&b.TenderId,
+		&b.AuthorType,
+		&b.AuthorId,
+		&b.Version,
+		&b.CreatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return entity.Bid{}, repoerrs.ErrNotFound
+		}
+		log.Debug("err: ", err.Error())
+		return entity.Bid{}, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	return b, nil
 }

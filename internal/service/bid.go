@@ -44,3 +44,7 @@ func (bs *BidService) GetBidStatus(u UserParam, bidId string) (string, error) {
 
 	return status, err
 }
+
+func (bs *BidService) EditBid(param UserParam, bidId string, params map[string]interface{}) (entity.Bid, error) {
+	return bs.bidRepo.EditBid(context.Background(), bidId, params)
+}

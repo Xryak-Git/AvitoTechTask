@@ -86,6 +86,7 @@ type Bid interface {
 	GetBidsForTender(params GetBidsForTenderParams, tenderId string) ([]entity.Bid, error)
 	GetBidStatus(param UserParam, bidId string) (string, error)
 	UpdateBidStatus(params UpdateBidStatusParams, bidId string) (entity.Bid, error)
+	EditBid(param UserParam, bidId string, params map[string]interface{}) (entity.Bid, error)
 }
 
 type Services struct {
