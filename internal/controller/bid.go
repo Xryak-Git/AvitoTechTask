@@ -27,27 +27,27 @@ func (bc *BidController) CreateBid(w http.ResponseWriter, r *http.Request) {
 	bid, err := bc.BidService.CreateBid(*bi)
 	log.Debug("CreateBid err: ", err)
 
-	if err != nil {
-		if err == service.ErrUserIsNotResposible || err == service.ErrUserNotExists {
-			ErrorResponse(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		log.Debug("err: ", err.Error())
-		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
-		return
-	}
+	//if err != nil {
+	//	if err == service.ErrUserIsNotResposible || err == service.ErrUserNotExists {
+	//		ErrorResponse(w, err.Error(), http.StatusBadRequest)
+	//		return
+	//	}
+	//	log.Debug("err: ", err.Error())
+	//	ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+	//	return
+	//}
 
 	SendJSONResponse(w, bid)
 }
 
 func (bc *BidController) GetUserBids(w http.ResponseWriter, r *http.Request) {
-	bp, err := ParseJSONBody[service.GetUserBidParams](r, w)
+	ubp, err := DecodeFormParams[service.GetUserBidParams](r)
 	if err != nil {
 		HandleRequestError(w, err)
 		return
 	}
 
-	bids, err := bc.BidService.GetUserBids(*bp)
+	bids, err := bc.BidService.GetUserBids(*ubp)
 	log.Debug("GetUserBids err: ", err)
 
 	SendJSONResponse(w, bids)

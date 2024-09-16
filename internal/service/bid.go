@@ -24,7 +24,6 @@ func (bs BidService) CreateBid(i CreateBidInput) (entity.Bid, error) {
 	return bs.bidRepo.CreateBid(context.Background(), i.Name, i.Description, i.TenderId, i.AuthorType, i.AuthorId)
 }
 
-func (bs BidService) GetUserBids(params GetUserBidParams) ([]entity.Bid, error) {
-	//TODO implement me
-	panic("implement me")
+func (bs BidService) GetUserBids(ubp GetUserBidParams) ([]entity.Bid, error) {
+	return bs.bidRepo.GetUserBids(context.Background(), ubp.Username, ubp.Limit, ubp.Offset)
 }

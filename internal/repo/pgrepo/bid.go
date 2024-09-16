@@ -5,6 +5,10 @@ import (
 	"avitoTech/internal/repo/repoerrs"
 	"avitoTech/internal/storage/postgres"
 	"context"
+	"errors"
+	"fmt"
+	"github.com/jackc/pgx/v5"
+	log "log/slog"
 )
 
 type BidRepo struct {
@@ -38,4 +42,51 @@ func (r *BidRepo) CreateBid(ctx context.Context, name string, description string
 	}
 
 	return bid, nil
+}
+
+func (r *BidRepo) GetUserBids(ctx context.Context, username string, limit int, offset int) ([]entity.Bid, error) {
+	const fn = "repo.pgrepo.bid.GetUserBids"
+
+	sql := `
+	SELECT b.*
+	FROM bid b
+			 JOIN employee e ON b.author_id = e.id
+	WHERE e.username = $1
+	LIMIT $2
+	OFFSET $3
+	`
+
+	rows, err := r.Pool.Query(ctx, sql, username, limit, offset)
+
+	if err != nil {
+		log.Debug("err: ", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return []entity.Bid{}, repoerrs.ErrNotFound
+		}
+		return []entity.Bid{}, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	defer rows.Close()
+
+	var bids []entity.Bid
+	for rows.Next() {
+		var b entity.Bid
+		err := rows.Scan(
+			&b.Id,
+			&b.Name,
+			&b.Description,
+			&b.Status,
+			&b.TenderId,
+			&b.AuthorType,
+			&b.AuthorId,
+			&b.Version,
+			&b.CreatedAt,
+		)
+		if err != nil {
+			return []entity.Bid{}, fmt.Errorf("%s: %v", fn, err)
+		}
+		bids = append(bids, b)
+	}
+	return bids, nil
+
 }
