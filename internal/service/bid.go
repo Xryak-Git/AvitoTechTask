@@ -27,3 +27,7 @@ func (bs BidService) CreateBid(i CreateBidInput) (entity.Bid, error) {
 func (bs BidService) GetUserBids(ubp GetUserBidParams) ([]entity.Bid, error) {
 	return bs.bidRepo.GetUserBids(context.Background(), ubp.Username, ubp.Limit, ubp.Offset)
 }
+
+func (bs BidService) GetBidsForTender(bftp GetBidsForTenderParams, tenderId string) ([]entity.Bid, error) {
+	return bs.bidRepo.GetBidsForTender(context.Background(), tenderId, bftp.Limit, bftp.Offset)
+}

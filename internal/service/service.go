@@ -28,6 +28,10 @@ type GetParams struct {
 	Offset int `schema:"offset" validate:"omitempty,gte=0"`
 }
 
+type UserParam struct {
+	Username string `schema:"username" validate:"required"`
+}
+
 type GetTendersParams struct {
 	GetParams
 	ServiceType []string `schema:"service_type" validate:"required,dive,alpha"`
@@ -35,11 +39,7 @@ type GetTendersParams struct {
 
 type GetUserTendersParams struct {
 	GetParams
-	Username string `schema:"username" validate:"required,alpha"`
-}
-
-type UserParam struct {
-	Username string `schema:"username" validate:"required,alpha"`
+	UserParam
 }
 
 type UpdateTenderStatusParams struct {
@@ -57,7 +57,12 @@ type CreateBidInput struct {
 
 type GetUserBidParams struct {
 	GetParams
-	Username string `schema:"username" validate:"required,alpha"`
+	UserParam
+}
+
+type GetBidsForTenderParams struct {
+	GetParams
+	UserParam
 }
 
 type Tender interface {
@@ -73,6 +78,7 @@ type Tender interface {
 type Bid interface {
 	CreateBid(input CreateBidInput) (entity.Bid, error)
 	GetUserBids(params GetUserBidParams) ([]entity.Bid, error)
+	GetBidsForTender(params GetBidsForTenderParams, tenderId string) ([]entity.Bid, error)
 }
 
 type Services struct {

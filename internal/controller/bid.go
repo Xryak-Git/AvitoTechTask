@@ -2,6 +2,7 @@ package controller
 
 import (
 	"avitoTech/internal/service"
+	"github.com/go-chi/chi/v5"
 	log "log/slog"
 	"net/http"
 )
@@ -54,7 +55,18 @@ func (bc *BidController) GetUserBids(w http.ResponseWriter, r *http.Request) {
 }
 
 func (bc *BidController) GetBidsForTender(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	bftp, err := DecodeFormParams[service.GetBidsForTenderParams](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	tenderId := chi.URLParam(r, "tenderId")
+
+	bids, err := bc.BidService.GetBidsForTender(*bftp, tenderId)
+	log.Debug("GetUserBids err: ", err)
+
+	SendJSONResponse(w, bids)
 }
 
 func (bc *BidController) GetBidStatus(w http.ResponseWriter, r *http.Request) {

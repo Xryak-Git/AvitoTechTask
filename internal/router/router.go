@@ -37,7 +37,7 @@ func NewRouter(services *service.Services) chi.Router {
 			r.Post("/new", bc.CreateBid)
 
 			r.Get("/my", bc.GetUserBids)
-			r.Get("/{tenderId}/list}", bc.GetBidsForTender)
+			r.Get("/{tenderId}/list", bc.GetBidsForTender)
 			r.Get("/{bidId}/status", bc.GetBidStatus)
 
 			r.Put("/{bidId}/status", bc.UpdateBidStatus)
