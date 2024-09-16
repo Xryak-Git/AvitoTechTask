@@ -183,7 +183,9 @@ func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// TODO: ADd responsible check implement fully
 func (tc *TenderController) RollbackTender(w http.ResponseWriter, r *http.Request) {
+
 	u, err := DecodeFormParams[service.UserParam](r)
 	if err != nil {
 		HandleRequestError(w, err)

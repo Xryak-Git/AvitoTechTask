@@ -14,7 +14,7 @@ type Tender interface {
 	GetTenderStatus(ctx context.Context, tenderId string) (string, error)
 	UpdateTender(ctx context.Context, tenderId string, params map[string]interface{}) (entity.Tender, error)
 	UpdateTenderStatus(ctx context.Context, tenderId, status string) (entity.Tender, error)
-	RollbackTenderVersion(ctx context.Context, tenderId string, version int) error
+	RollbackTenderVersion(ctx context.Context, tenderId string, version int) (entity.Tender, error)
 	GetTenderById(ctx context.Context, tenderId string) (entity.Tender, error)
 	IsTenderExists(ctx context.Context, tenderId string) (bool, error)
 }

@@ -288,7 +288,7 @@ func (r *TenderRepo) GetTenderById(ctx context.Context, tenderId string) (entity
 	return t, nil
 }
 
-func (r *TenderRepo) RollbackTenderVersion(ctx context.Context, tenderId string, version int) error {
+func (r *TenderRepo) RollbackTenderVersion(ctx context.Context, tenderId string, version int) (entity.Tender, error) {
 	const fn = "repo.pgrepo.tender.RollbackTenderVersion"
 
 	sql := `
@@ -307,10 +307,10 @@ func (r *TenderRepo) RollbackTenderVersion(ctx context.Context, tenderId string,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return repoerrs.ErrNotFound
+			return entity.Tender{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", fn, err)
-		return fmt.Errorf("%s: %v", fn, err)
+		return entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
 	}
 
 	// Увеличение версии и сохранение как новой
@@ -319,19 +319,30 @@ func (r *TenderRepo) RollbackTenderVersion(ctx context.Context, tenderId string,
         SET name = $1, description = $2, service_type = $3, 
             status = $4, organization_id = $5
         WHERE id = $6
+        RETURNING id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at
         `
 
-	_, err = r.Pool.Exec(ctx, sql, vc.Name, vc.Description, vc.ServiceType, vc.Status, vc.OrganizationId, tenderId)
+	var t entity.Tender
+	err = r.Pool.QueryRow(ctx, sql, vc.Name, vc.Description, vc.ServiceType, vc.Status, vc.OrganizationId, tenderId).Scan(
+		&t.Id,
+		&t.Name,
+		&t.Description,
+		&t.ServiceType,
+		&t.Status,
+		&t.OrganizationId,
+		&t.Version,
+		&t.CreatedAt,
+	)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return repoerrs.ErrNotFound
+			return entity.Tender{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", fn, err)
-		return fmt.Errorf("%s: %v", fn, err)
+		return entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
 	}
 
-	return err
+	return t, nil
 }
 
 func (r *TenderRepo) IsTenderExists(ctx context.Context, tenderId string) (bool, error) {
