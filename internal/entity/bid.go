@@ -13,3 +13,12 @@ type Bid struct {
 	Version     string    `json:"version"`
 	CreatedAt   time.Time `json:"createdAt"`
 }
+
+type VersionedBid struct {
+	Name        string `db:"name"`
+	Description string `db:"description"`
+	Status      string `db:"status"`
+	TenderId    string `db:"tender_id"`
+	AuthorType  string `db:"author_type"`
+	AuthorId    string `db:"author_id"`
+}

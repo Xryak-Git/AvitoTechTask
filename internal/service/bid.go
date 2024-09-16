@@ -57,3 +57,7 @@ func (bs *BidService) SubmitBidFeedback(params SubmitBidFeedbackParams, bidId st
 	return bid, err
 
 }
+
+func (bs *BidService) RollbackBid(param UserParam, bidId string, version int) (entity.Bid, error) {
+	return bs.bidRepo.RollbackBidVersion(context.Background(), bidId, version)
+}

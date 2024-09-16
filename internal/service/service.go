@@ -93,6 +93,7 @@ type Bid interface {
 	UpdateBidStatus(params UpdateBidStatusParams, bidId string) (entity.Bid, error)
 	EditBid(param UserParam, bidId string, params map[string]interface{}) (entity.Bid, error)
 	SubmitBidFeedback(params SubmitBidFeedbackParams, bidId string) (entity.Bid, error)
+	RollbackBid(param UserParam, bidId string, version int) (entity.Bid, error)
 }
 
 type Services struct {

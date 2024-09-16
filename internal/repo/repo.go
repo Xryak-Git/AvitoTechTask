@@ -28,6 +28,7 @@ type Bid interface {
 	EditBid(ctx context.Context, bidId string, params map[string]interface{}) (entity.Bid, error)
 	CreateBidFeedback(ctx context.Context, feedback string, bidId string) error
 	GetBid(ctx context.Context, id string) (entity.Bid, error)
+	RollbackBidVersion(ctx context.Context, bidId string, version int) (entity.Bid, error)
 }
 
 type User interface {

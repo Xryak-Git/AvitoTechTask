@@ -7,6 +7,7 @@ import (
 	"io"
 	log "log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -162,7 +163,24 @@ func (bc *BidController) SubmitBidFeedback(w http.ResponseWriter, r *http.Reques
 }
 
 func (bc *BidController) RollbackBid(w http.ResponseWriter, r *http.Request) {
-	ErrorResponse(w, "not implemented", http.StatusBadRequest)
+	u, err := DecodeFormParams[service.UserParam](r)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+	bidId := chi.URLParam(r, "bidId")
+	versionStr := chi.URLParam(r, "version")
+
+	versionInt, err := strconv.Atoi(versionStr)
+	if err != nil {
+		HandleRequestError(w, err)
+		return
+	}
+
+	bid, err := bc.BidService.RollbackBid(*u, bidId, versionInt)
+
+	SendJSONResponse(w, bid)
+
 }
 
 func (bc *BidController) GetBidReviews(w http.ResponseWriter, r *http.Request) {

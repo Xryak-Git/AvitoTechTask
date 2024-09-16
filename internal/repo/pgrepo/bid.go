@@ -296,3 +296,60 @@ func (r *BidRepo) GetBid(ctx context.Context, id string) (entity.Bid, error) {
 	}
 	return b, nil
 }
+
+func (r *BidRepo) RollbackBidVersion(ctx context.Context, bidId string, version int) (entity.Bid, error) {
+	const fn = "repo.pgrepo.bid.RollbackBidVersion"
+
+	sql := `
+	SELECT name, description, status, tender_id, author_type, author_id 
+	FROM bid_versions
+	WHERE bid_id = $1 AND version = $2
+    `
+
+	var vb entity.VersionedBid
+	err := r.Pool.QueryRow(ctx, sql, bidId, version).Scan(
+		&vb.Name,
+		&vb.Description,
+		&vb.Status,
+		&vb.TenderId,
+		&vb.AuthorType,
+		&vb.AuthorId,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return entity.Bid{}, repoerrs.ErrNotFound
+		}
+		log.Debug("err: ", fn, err)
+		return entity.Bid{}, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	sql = `
+	UPDATE bid
+	SET name = $1, description = $2, status = $3, tender_id = $4, author_type = $5, author_id = $6
+	WHERE id = $7
+	RETURNING id, name, description, INITCAP(status::text), tender_id, INITCAP(author_type::text), author_id, version, created_at
+	`
+
+	var b entity.Bid
+	err = r.Pool.QueryRow(ctx, sql, vb.Name, vb.Description, vb.Status, vb.TenderId, vb.AuthorType, vb.AuthorId, bidId).Scan(
+		&b.Id,
+		&b.Name,
+		&b.Description,
+		&b.Status,
+		&b.TenderId,
+		&b.AuthorType,
+		&b.AuthorId,
+		&b.Version,
+		&b.CreatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return entity.Bid{}, repoerrs.ErrNotFound
+		}
+		log.Debug("err: ", fn, err)
+		return entity.Bid{}, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	return b, nil
+}
