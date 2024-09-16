@@ -110,10 +110,21 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByBidId(ctx context.Co
 	const fn = "repo.pgrepo.responsible.IsUserResponsibleForOrganizationByBidId"
 
 	sql := `
-
+	SELECT tender_id
+	FROM
+		bid
+	WHERE author_id = $1 AND id = $2
 	`
-	_ = sql
 
-	return true, nil
+	var tId string
+	err := r.Pool.QueryRow(ctx, sql, userId, bidId).Scan(&tId)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return false, repoerrs.ErrNotFound
+		}
+		return false, fmt.Errorf("%s: %v", fn, err)
+	}
+
+	return r.IsUserResponsibleForOrganizationByTenderId(ctx, userId, tId)
 
 }
