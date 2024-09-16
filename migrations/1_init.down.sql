@@ -1,4 +1,21 @@
-DROP TABLE IF EXISTS tender;
+drop table if exists organization_responsible;
+
+drop table if exists tender_versions;
+
+drop table if exists bid_bidreview;
+
+drop table if exists bid_review;
+
+drop table if exists bid_versions;
+
+drop table if exists bid;
+
+drop table if exists employee;
+
+drop table if exists tender;
+
+drop table if exists organization;
+
 
 DROP TYPE IF EXISTS tender_status;
 

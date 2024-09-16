@@ -1,9 +1,11 @@
 package config
 
 import (
+	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -15,13 +17,28 @@ type Config struct {
 }
 
 type HTTPServer struct {
-	Adress      string        `yaml:"port" envDefault:"0.0.0.0:8080"`
+	Adress      string        `yaml:"port" envDefault:":8080"`
 	Timeout     time.Duration `yaml:"timeout"`
 	IdleTimeout time.Duration `yaml:"idle_timeout"`
 }
 
 type Postgres struct {
-	URL string `env-required:"true" env:"POSTGRES_CONN"`
+	Url     string `env:"POSTGRES_CONN"`
+	JdbcUrl string `env:"POSTGRES_JDBC_URL"`
+
+	User     string `env:"POSTGRES_USER"`
+	Password string `env:"POSTGRES_PASSWORD"`
+	Host     string `env:"POSTGRES_HOST"`
+	Port     int    `env:"POSTGRES_PORT"`
+	DbName   string `env:"POSTGRES_DB"`
+}
+
+func jdbcToPgx(jdbcURL, username, password string) string {
+	// Удаляем префикс "jdbc:"
+	pgxURL := strings.Replace(jdbcURL, "jdbc:", "", 1)
+
+	// Добавляем информацию о пользователе и пароле
+	return fmt.Sprintf("postgres://%s:%s@%s", username, password, pgxURL[len("postgresql://"):])
 }
 
 func MustLoad() *Config {
@@ -45,5 +62,16 @@ func MustLoad() *Config {
 		log.Fatalf("cannot update config: %s", err)
 	}
 
+	if cfg.Url == "" {
+		if cfg.JdbcUrl != "" {
+			cfg.Url = jdbcToPgx(cfg.Url, cfg.User, cfg.Password)
+		}
+		if cfg.User == "" || cfg.Password == "" || cfg.Host == "" || cfg.Port == 0 || cfg.DbName == "" {
+			log.Fatalf("no data for for postgres url")
+		}
+
+		cfg.Url = fmt.Sprintf("postgres://%s:%s@%s:%s/%s", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DbName)
+	}
 	return cfg
+
 }
