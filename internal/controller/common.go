@@ -55,7 +55,7 @@ func SendJSONResponse(w http.ResponseWriter, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func HandelError(w http.ResponseWriter, exptectedErrList map[error]int, err error) {
+func HandelServiceError(w http.ResponseWriter, exptectedErrList map[error]int, err error) {
 	if val, ok := exptectedErrList[err]; ok {
 		ErrorResponse(w, err.Error(), val)
 	} else {

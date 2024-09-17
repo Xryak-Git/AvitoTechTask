@@ -12,7 +12,7 @@ import (
 )
 
 type BidController struct {
-	BidService     service.Bid
+	bidService     service.Bid
 	expectedErrors map[error]int
 }
 
@@ -28,7 +28,7 @@ func NewBidController(bidService service.Bid) BidController {
 	}
 
 	return BidController{
-		BidService:     bidService,
+		bidService:     bidService,
 		expectedErrors: expectedErrors,
 	}
 }
@@ -41,11 +41,11 @@ func (bc *BidController) CreateBid(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bid, err := bc.BidService.CreateBid(*bi)
+	bid, err := bc.bidService.CreateBid(*bi)
 
 	if err != nil {
 		log.Debug("CreateBid err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 
@@ -59,11 +59,11 @@ func (bc *BidController) GetUserBids(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bids, err := bc.BidService.GetUserBids(*ubp)
+	bids, err := bc.bidService.GetUserBids(*ubp)
 
 	if err != nil {
 		log.Debug("GetUserBids err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 
@@ -78,10 +78,10 @@ func (bc *BidController) GetBidsForTender(w http.ResponseWriter, r *http.Request
 	}
 	tenderId := chi.URLParam(r, "tenderId")
 
-	bids, err := bc.BidService.GetBidsForTender(*bftp, tenderId)
+	bids, err := bc.bidService.GetBidsForTender(*bftp, tenderId)
 	if err != nil {
 		log.Debug("GetBidsForTender err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 
@@ -96,10 +96,10 @@ func (bc *BidController) GetBidStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	bidId := chi.URLParam(r, "bidId")
 
-	status, err := bc.BidService.GetBidStatus(*u, bidId)
+	status, err := bc.bidService.GetBidStatus(*u, bidId)
 	if err != nil {
 		log.Debug("GetBidStatus err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 
@@ -114,10 +114,10 @@ func (bc *BidController) UpdateBidStatus(w http.ResponseWriter, r *http.Request)
 	}
 	bidId := chi.URLParam(r, "bidId")
 
-	bid, err := bc.BidService.UpdateBidStatus(*bs, bidId)
+	bid, err := bc.bidService.UpdateBidStatus(*bs, bidId)
 	if err != nil {
 		log.Debug("UpdateBidStatus err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 
@@ -161,10 +161,10 @@ func (bc *BidController) EditBid(w http.ResponseWriter, r *http.Request) {
 
 	bidId := chi.URLParam(r, "bidId")
 
-	bid, err := bc.BidService.EditBid(*u, bidId, params)
+	bid, err := bc.bidService.EditBid(*u, bidId, params)
 	if err != nil {
 		log.Debug("EditBid err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 
@@ -180,10 +180,10 @@ func (bc *BidController) SubmitBidFeedback(w http.ResponseWriter, r *http.Reques
 	}
 	bidId := chi.URLParam(r, "bidId")
 
-	bid, err := bc.BidService.SubmitBidFeedback(*bf, bidId)
+	bid, err := bc.bidService.SubmitBidFeedback(*bf, bidId)
 	if err != nil {
 		log.Debug("SubmitBidDecision err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 
@@ -205,10 +205,10 @@ func (bc *BidController) RollbackBid(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bid, err := bc.BidService.RollbackBid(*u, bidId, versionInt)
+	bid, err := bc.bidService.RollbackBid(*u, bidId, versionInt)
 	if err != nil {
 		log.Debug("RollbackBid err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 
@@ -224,10 +224,10 @@ func (bc *BidController) GetBidReviews(w http.ResponseWriter, r *http.Request) {
 	}
 	tenderId := chi.URLParam(r, "tenderId")
 
-	reviews, err := bc.BidService.GetBidReviews(*params, tenderId)
+	reviews, err := bc.bidService.GetBidReviews(*params, tenderId)
 	if err != nil {
 		log.Debug("RollbackBid err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 
@@ -242,11 +242,11 @@ func (bc *BidController) SubmitBidDecision(w http.ResponseWriter, r *http.Reques
 	}
 	bidId := chi.URLParam(r, "bidId")
 
-	bid, err := bc.BidService.SubmitBidDecision(*params, bidId)
+	bid, err := bc.bidService.SubmitBidDecision(*params, bidId)
 
 	if err != nil {
 		log.Debug("SubmitBidDecision err: ", err.Error())
-		HandelError(w, bc.expectedErrors, err)
+		HandelServiceError(w, bc.expectedErrors, err)
 		return
 	}
 

@@ -11,9 +11,7 @@ func ErrorResponse(w http.ResponseWriter, message string, code int) {
 }
 
 func HandleRequestError(w http.ResponseWriter, err error) {
-	if err != nil {
-		ErrorResponse(w, "invalid params", http.StatusBadRequest)
-		log.Debug("err: " + err.Error())
-		return
-	}
+	ErrorResponse(w, "invalid params", http.StatusBadRequest)
+	log.Debug("err: " + err.Error())
+	return
 }

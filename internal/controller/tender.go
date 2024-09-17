@@ -12,12 +12,21 @@ import (
 )
 
 type TenderController struct {
-	tenderService service.Tender
+	tenderService  service.Tender
+	expectedErrors map[error]int
 }
 
 func NewTenderController(tenderService service.Tender) TenderController {
+	expectedErrors := map[error]int{
+		service.ErrUserNotExists:           http.StatusUnauthorized,
+		service.ErrUserIsNotResposible:     http.StatusForbidden,
+		service.ErrTenderOrVersionNotFound: http.StatusNotFound,
+		service.ErrTenderNotFound:          http.StatusNotFound,
+	}
+
 	return TenderController{
-		tenderService: tenderService,
+		tenderService:  tenderService,
+		expectedErrors: expectedErrors,
 	}
 }
 
@@ -26,6 +35,7 @@ func (tc *TenderController) CreateTender(w http.ResponseWriter, r *http.Request)
 	t, err := ParseJSONBody[service.CreateTenderInput](r, w)
 
 	if err != nil {
+		log.Debug("err: " + err.Error())
 		HandleRequestError(w, err)
 		return
 	}
@@ -33,17 +43,8 @@ func (tc *TenderController) CreateTender(w http.ResponseWriter, r *http.Request)
 	tender, err := tc.tenderService.CreateTender(*t)
 
 	if err != nil {
-		if err == service.ErrUserNotExists {
-			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		if err == service.ErrUserIsNotResposible {
-			ErrorResponse(w, err.Error(), http.StatusForbidden)
-			return
-		}
-
-		log.Debug("err: ", err.Error())
-		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		log.Debug("CreateTender err: ", err.Error())
+		HandelServiceError(w, tc.expectedErrors, err)
 		return
 	}
 
@@ -62,8 +63,8 @@ func (tc *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
 	tenders, err := tc.tenderService.GetTenders(*gtp)
 
 	if err != nil {
-		log.Debug("err: %v", err.Error())
-		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		log.Debug("GetTenders err: ", err.Error())
+		HandelServiceError(w, tc.expectedErrors, err)
 		return
 	}
 
@@ -81,13 +82,8 @@ func (tc *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Reques
 	tenders, err := tc.tenderService.GetUserTenders(*gutp)
 
 	if err != nil {
-		if err == service.ErrUserNotExists {
-			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-
-		log.Debug("err: %v", err.Error())
-		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		log.Debug("GetUserTenders err: " + err.Error())
+		HandelServiceError(w, tc.expectedErrors, err)
 		return
 	}
 
@@ -107,19 +103,8 @@ func (tc *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Reque
 	status, err := tc.tenderService.GetTenderStatus(*u, tenderId)
 
 	if err != nil {
-		if err == service.ErrUserNotExists {
-			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		if err == service.ErrUserIsNotResposible {
-			ErrorResponse(w, err.Error(), http.StatusForbidden)
-			return
-		}
-		if err == service.ErrTenderNotFound {
-			ErrorResponse(w, err.Error(), http.StatusNotFound)
-		}
-		log.Debug("err: %v", err.Error())
-		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		log.Debug("GetTenderStatus err: ", err.Error())
+		HandelServiceError(w, tc.expectedErrors, err)
 		return
 	}
 
@@ -166,20 +151,8 @@ func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 	tender, err := tc.tenderService.EditTender(*u, tenderId, params)
 
 	if err != nil {
-		if err == service.ErrUserNotExists {
-			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		if err == service.ErrUserIsNotResposible {
-			ErrorResponse(w, err.Error(), http.StatusForbidden)
-			return
-		}
-		if err == service.ErrTenderNotFound {
-			ErrorResponse(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		log.Debug("err: ", err.Error())
-		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		log.Debug("EditTender err: ", err.Error())
+		HandelServiceError(w, tc.expectedErrors, err)
 		return
 	}
 
@@ -206,20 +179,8 @@ func (tc *TenderController) RollbackTender(w http.ResponseWriter, r *http.Reques
 	tender, err := tc.tenderService.RollbackTender(*u, tenderId, versionInt)
 
 	if err != nil {
-		if err == service.ErrUserNotExists {
-			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		if err == service.ErrUserIsNotResposible {
-			ErrorResponse(w, err.Error(), http.StatusForbidden)
-			return
-		}
-		if err == service.ErrTenderOrVersionNotFound {
-			ErrorResponse(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		log.Debug("err: ", err.Error())
-		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		log.Debug("RollbackTender err: ", err.Error())
+		HandelServiceError(w, tc.expectedErrors, err)
 		return
 	}
 
@@ -239,20 +200,8 @@ func (tc *TenderController) UpdateTenderStatus(w http.ResponseWriter, r *http.Re
 	tender, err := tc.tenderService.UpdateTenderStatus(*utsp, tenderId)
 
 	if err != nil {
-		if err == service.ErrUserNotExists {
-			ErrorResponse(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		if err == service.ErrUserIsNotResposible {
-			ErrorResponse(w, err.Error(), http.StatusForbidden)
-			return
-		}
-		if err == service.ErrTenderNotFound {
-			ErrorResponse(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		log.Debug("err: ", err.Error())
-		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)
+		log.Debug("UpdateTenderStatus err: ", err.Error())
+		HandelServiceError(w, tc.expectedErrors, err)
 		return
 	}
 
