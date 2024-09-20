@@ -41,12 +41,7 @@ func (bs *BidService) CreateBid(params CreateBidInput) (entity.Bid, error) {
 		return entity.Bid{}, err
 	}
 
-	bid, err := bs.bidRepo.CreateBid(context.Background(), params.Name, params.Description, params.TenderId, params.AuthorType, params.AuthorId)
-	if err != nil {
-		return entity.Bid{}, err
-	}
-
-	return bid, nil
+	return bs.bidRepo.CreateBid(context.Background(), params.Name, params.Description, params.TenderId, params.AuthorType, params.AuthorId)
 }
 
 func (bs *BidService) GetUserBids(params GetUserBidParams) ([]entity.Bid, error) {
@@ -86,112 +81,77 @@ func (bs *BidService) GetBidsForTender(params GetBidsForTenderParams, tenderId s
 }
 
 func (bs *BidService) GetBidStatus(params UserParam, bidId string) (string, error) {
-	user, err := bs.userRepo.GetByName(context.Background(), params.Username)
+	user, err := GetUserByName(bs.userRepo, params.Username)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return "", ErrUserNotExists
-		}
 		return "", err
 	}
 
-	isResponsibe, err := bs.responsibleRepo.IsUserResponsibleForOrganizationByBidId(context.Background(), user.Id, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return "", ErrUserIsNotResposible
-		}
 		return "", err
 	}
-	if !isResponsibe {
-		return "", ErrUserIsNotResposible
-	}
 
-	exists, err := bs.bidRepo.IsBidExists(context.Background(), bidId)
-	if err != nil || !exists {
-		return "", ErrTenderNotFound
+	err = IsBidExists(bs.bidRepo, bidId)
+	if err != nil {
+		return "", err
 	}
 
 	return bs.bidRepo.GetBidStatus(context.Background(), bidId)
 }
 
 func (bs *BidService) UpdateBidStatus(params UpdateBidStatusParams, bidId string) (entity.Bid, error) {
-	user, err := bs.userRepo.GetByName(context.Background(), params.Username)
+	user, err := GetUserByName(bs.userRepo, params.Username)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return entity.Bid{}, ErrUserNotExists
-		}
 		return entity.Bid{}, err
 	}
 
-	isResponsibe, err := bs.responsibleRepo.IsUserResponsibleForOrganizationByBidId(context.Background(), user.Id, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return entity.Bid{}, ErrUserIsNotResposible
-		}
 		return entity.Bid{}, err
 	}
-	if !isResponsibe {
-		return entity.Bid{}, ErrUserIsNotResposible
-	}
 
-	exists, err := bs.bidRepo.IsBidExists(context.Background(), bidId)
-	if err != nil || !exists {
-		return entity.Bid{}, ErrTenderNotFound
+	err = IsBidExists(bs.bidRepo, bidId)
+	if err != nil {
+		return entity.Bid{}, err
 	}
 
 	return bs.bidRepo.UpdateBidStatus(context.Background(), params.Status, bidId)
 }
 
 func (bs *BidService) EditBid(params UserParam, bidId string, editFields map[string]interface{}) (entity.Bid, error) {
-	user, err := bs.userRepo.GetByName(context.Background(), params.Username)
+	user, err := GetUserByName(bs.userRepo, params.Username)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return entity.Bid{}, ErrUserNotExists
-		}
 		return entity.Bid{}, err
 	}
 
-	isResponsibe, err := bs.responsibleRepo.IsUserResponsibleForOrganizationByBidId(context.Background(), user.Id, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return entity.Bid{}, ErrUserIsNotResposible
-		}
 		return entity.Bid{}, err
 	}
-	if !isResponsibe {
-		return entity.Bid{}, ErrUserIsNotResposible
+
+	err = IsBidExists(bs.bidRepo, bidId)
+	if err != nil {
+		return entity.Bid{}, err
 	}
 
-	exists, err := bs.bidRepo.IsBidExists(context.Background(), bidId)
-	if err != nil || !exists {
-		return entity.Bid{}, ErrTenderNotFound
-	}
 	return bs.bidRepo.EditBid(context.Background(), bidId, editFields)
 }
 
 func (bs *BidService) SubmitBidFeedback(params SubmitBidFeedbackParams, bidId string) (entity.Bid, error) {
 
-	user, err := bs.userRepo.GetByName(context.Background(), params.Username)
+	user, err := GetUserByName(bs.userRepo, params.Username)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return entity.Bid{}, ErrUserNotExists
-		}
 		return entity.Bid{}, err
 	}
 
-	isResponsibe, err := bs.responsibleRepo.IsUserResponsibleForOrganizationByBidId(context.Background(), user.Id, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return entity.Bid{}, ErrUserIsNotResposible
-		}
 		return entity.Bid{}, err
 	}
-	if !isResponsibe {
-		return entity.Bid{}, ErrUserIsNotResposible
-	}
 
-	exists, err := bs.bidRepo.IsBidExists(context.Background(), bidId)
-	if err != nil || !exists {
-		return entity.Bid{}, ErrTenderNotFound
+	err = IsBidExists(bs.bidRepo, bidId)
+	if err != nil {
+		return entity.Bid{}, err
 	}
 
 	err = bs.bidRepo.CreateBidFeedback(context.Background(), params.BidFeedback, bidId)
@@ -204,88 +164,61 @@ func (bs *BidService) SubmitBidFeedback(params SubmitBidFeedbackParams, bidId st
 }
 
 func (bs *BidService) RollbackBid(params UserParam, bidId string, version int) (entity.Bid, error) {
-	user, err := bs.userRepo.GetByName(context.Background(), params.Username)
+	user, err := GetUserByName(bs.userRepo, params.Username)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return entity.Bid{}, ErrUserNotExists
-		}
 		return entity.Bid{}, err
 	}
 
-	isResponsibe, err := bs.responsibleRepo.IsUserResponsibleForOrganizationByBidId(context.Background(), user.Id, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return entity.Bid{}, ErrUserIsNotResposible
-		}
 		return entity.Bid{}, err
 	}
-	if !isResponsibe {
-		return entity.Bid{}, ErrUserIsNotResposible
-	}
 
-	exists, err := bs.bidRepo.IsBidExists(context.Background(), bidId)
-	if err != nil || !exists {
-		return entity.Bid{}, ErrTenderNotFound
+	err = IsBidExists(bs.bidRepo, bidId)
+	if err != nil {
+		return entity.Bid{}, err
 	}
 
 	bid, err := bs.bidRepo.RollbackBidVersion(context.Background(), bidId, version)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
+		if errors.Is(err, repoerrs.ErrNotFound) {
 			return entity.Bid{}, ErrBidOrVersionNotFound
 		}
 		return entity.Bid{}, err
 	}
 
-	return bid, err
+	return bid, nil
 }
 
 func (bs *BidService) GetBidReviews(params GetBidReviewsParams, tenderId string) ([]entity.BidReview, error) {
-	responsible, err := bs.userRepo.GetByName(context.Background(), params.RequesterUsername)
+	responsible, err := GetUserByName(bs.userRepo, params.RequesterUsername)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return []entity.BidReview{}, ErrUserNotExists
-		}
 		return []entity.BidReview{}, err
 	}
 
-	isResponsible, err := bs.responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), responsible.Id, tenderId)
+	err = IsUserResponsibleByTenderId(bs.responsibleRepo, responsible.Id, tenderId)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return []entity.BidReview{}, ErrUserIsNotResposible
-		}
-		return []entity.BidReview{}, err
-	}
-	if !isResponsible {
-		return []entity.BidReview{}, ErrUserIsNotResposible
-	}
-
-	exists, err := bs.tenderRepo.IsTenderExists(context.Background(), tenderId)
-	if err != nil || !exists {
-		return []entity.BidReview{}, ErrTenderNotFound
-	}
-
-	author, err := bs.userRepo.GetByName(context.Background(), params.AuthorUsername)
-	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return []entity.BidReview{}, ErrUserNotExists
-		}
 		return []entity.BidReview{}, err
 	}
 
-	isUserMadeBid, err := bs.bidRepo.IsUserMadeBid(context.Background(), author.Id, tenderId)
+	err = IsTenderExists(bs.tenderRepo, tenderId)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return []entity.BidReview{}, ErrUserDoseNotMadeBidForTender
-		}
 		return []entity.BidReview{}, err
 	}
-	if !isUserMadeBid {
-		return []entity.BidReview{}, ErrUserDoseNotMadeBidForTender
+
+	author, err := GetUserByName(bs.userRepo, params.AuthorUsername)
+	if err != nil {
+		return []entity.BidReview{}, err
+	}
+
+	err = IsUserMadeBidForTender(bs.bidRepo, author.Id, tenderId)
+	if err != nil {
+		return []entity.BidReview{}, err
 	}
 
 	reviews, err := bs.bidRepo.GetAuthorBidReviews(context.Background(), author.Id, params.Limit, params.Offset)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
+		if errors.Is(err, repoerrs.ErrNotFound) {
 			return []entity.BidReview{}, ErrBidReviewsNotFound
 		}
 		return []entity.BidReview{}, err
@@ -295,9 +228,17 @@ func (bs *BidService) GetBidReviews(params GetBidReviewsParams, tenderId string)
 }
 
 func (bs *BidService) SubmitBidDecision(params SubmitBidDecisionParams, bidId string) (entity.Bid, error) {
-	user, _ := bs.userRepo.GetByName(context.Background(), params.Username)
+	user, err := GetUserByName(bs.userRepo, params.Username)
+	if err != nil {
+		return entity.Bid{}, err
+	}
 
-	err := bs.bidRepo.SubmitBidDecision(context.Background(), user.Id, bidId, params.Decision)
+	err = IsBidExists(bs.bidRepo, bidId)
+	if err != nil {
+		return entity.Bid{}, err
+	}
+
+	err = bs.bidRepo.SubmitBidDecision(context.Background(), user.Id, bidId, params.Decision)
 	if err != nil {
 		return entity.Bid{}, err
 	}

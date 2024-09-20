@@ -19,6 +19,17 @@ func GetUserById(userRepo repo.User, id string) (entity.User, error) {
 	return user, nil
 }
 
+func GetUserByName(userRepo repo.User, name string) (entity.User, error) {
+	user, err := userRepo.GetByName(context.Background(), name)
+	if err != nil {
+		if err == repoerrs.ErrNotFound {
+			return entity.User{}, ErrUserNotExists
+		}
+		return entity.User{}, err
+	}
+	return user, nil
+}
+
 func IsUserResponsibleByTenderId(responsibleRepo repo.Responsible, userId, tenderId string) error {
 	isResponsible, err := responsibleRepo.IsUserResponsibleForOrganizationByTenderId(context.Background(), userId, tenderId)
 	if err != nil {
@@ -30,6 +41,35 @@ func IsUserResponsibleByTenderId(responsibleRepo repo.Responsible, userId, tende
 	if !isResponsible {
 		return ErrUserIsNotResposible
 	}
+	return nil
+}
+
+func IsUserResponsibleByBidId(responsibleRepo repo.Responsible, userId, bidId string) error {
+	isResponsible, err := responsibleRepo.IsUserResponsibleForOrganizationByBidId(context.Background(), userId, bidId)
+	if err != nil {
+		if errors.Is(err, repoerrs.ErrNotFound) {
+			return ErrUserIsNotResposible
+		}
+		return err
+	}
+	if !isResponsible {
+		return ErrUserIsNotResposible
+	}
+	return nil
+}
+
+func IsUserMadeBidForTender(bidRepo repo.Bid, userId, tenderId string) error {
+	isUserMadeBid, err := bidRepo.IsUserMadeBid(context.Background(), userId, tenderId)
+	if err != nil {
+		if errors.Is(err, repoerrs.ErrNotFound) {
+			return ErrUserDoseNotMadeBidForTender
+		}
+		return err
+	}
+	if !isUserMadeBid {
+		return ErrUserDoseNotMadeBidForTender
+	}
+
 	return nil
 }
 
@@ -48,13 +88,17 @@ func IsTenderExists(tenderRepo repo.Tender, tenderId string) error {
 	return nil
 }
 
-func GetUserByName(userRepo repo.User, name string) (entity.User, error) {
-	user, err := userRepo.GetByName(context.Background(), name)
+func IsBidExists(bidRepo repo.Bid, bidId string) error {
+	exists, err := bidRepo.IsBidExists(context.Background(), bidId)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
-			return entity.User{}, ErrUserNotExists
+		if errors.Is(err, repoerrs.ErrNotFound) {
+			return ErrTendersNotFound
 		}
-		return entity.User{}, err
+		return err
 	}
-	return user, nil
+
+	if !exists {
+		return ErrTendersNotFound
+	}
+	return nil
 }
