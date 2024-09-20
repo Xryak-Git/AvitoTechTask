@@ -87,22 +87,22 @@ type SubmitBidDecisionParams struct {
 }
 
 type Tender interface {
-	CreateTender(input CreateTenderInput) (entity.Tender, error)
-	GetTenders(gtp GetTendersParams) ([]entity.Tender, error)
-	GetUserTenders(gutp GetUserTendersParams) ([]entity.Tender, error)
-	GetTenderStatus(up UserParam, tenderId string) (string, error)
-	EditTender(up UserParam, tenderId string, params map[string]interface{}) (entity.Tender, error)
-	UpdateTenderStatus(utsp UpdateTenderStatusParams, id string) (entity.Tender, error)
-	RollbackTender(u UserParam, tenderId string, version int) (entity.Tender, error)
+	CreateTender(params CreateTenderInput) (entity.Tender, error)
+	GetTenders(params GetTendersParams) ([]entity.Tender, error)
+	GetUserTenders(params GetUserTendersParams) ([]entity.Tender, error)
+	GetTenderStatus(params UserParam, tenderId string) (string, error)
+	EditTender(params UserParam, tenderId string, editFields map[string]interface{}) (entity.Tender, error)
+	UpdateTenderStatus(params UpdateTenderStatusParams, tenderId string) (entity.Tender, error)
+	RollbackTender(params UserParam, tenderId string, version int) (entity.Tender, error)
 }
 
 type Bid interface {
-	CreateBid(input CreateBidInput) (entity.Bid, error)
+	CreateBid(params CreateBidInput) (entity.Bid, error)
 	GetUserBids(params GetUserBidParams) ([]entity.Bid, error)
 	GetBidsForTender(params GetBidsForTenderParams, tenderId string) ([]entity.Bid, error)
-	GetBidStatus(param UserParam, bidId string) (string, error)
+	GetBidStatus(params UserParam, bidId string) (string, error)
 	UpdateBidStatus(params UpdateBidStatusParams, bidId string) (entity.Bid, error)
-	EditBid(param UserParam, bidId string, params map[string]interface{}) (entity.Bid, error)
+	EditBid(param UserParam, bidId string, editFields map[string]interface{}) (entity.Bid, error)
 	SubmitBidFeedback(params SubmitBidFeedbackParams, bidId string) (entity.Bid, error)
 	RollbackBid(param UserParam, bidId string, version int) (entity.Bid, error)
 	GetBidReviews(params GetBidReviewsParams, tenderId string) ([]entity.BidReview, error)
