@@ -102,12 +102,10 @@ func (r *TenderRepo) GetTenders(ctx context.Context, limit, offset int, serviceT
 			&t.CreatedAt,
 		)
 		if err != nil {
-			return []entity.Tender{}, fmt.Errorf("%s: %v", err)
+			return []entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
 		}
 		tenders = append(tenders, t)
 	}
-
-	log.Debug("GetTenders: ", tenders)
 
 	return tenders, nil
 }

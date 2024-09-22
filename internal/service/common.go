@@ -58,6 +58,20 @@ func IsUserResponsibleByBidId(responsibleRepo repo.Responsible, userId, bidId st
 	return nil
 }
 
+func IsUserResponsibleByOrganizationId(responsibleRepo repo.Responsible, userId, organizationId string) error {
+	isResponsible, err := responsibleRepo.IsUserResponsibleForOrganizationByOrganizationId(context.Background(), userId, organizationId)
+	if err != nil {
+		if errors.Is(err, repoerrs.ErrNotFound) {
+			return ErrUserIsNotResposible
+		}
+		return err
+	}
+	if !isResponsible {
+		return ErrUserIsNotResposible
+	}
+	return nil
+}
+
 func IsUserMadeBidForTender(bidRepo repo.Bid, userId, tenderId string) error {
 	isUserMadeBid, err := bidRepo.IsUserMadeBid(context.Background(), userId, tenderId)
 	if err != nil {
