@@ -209,7 +209,7 @@ func (r *TenderRepo) UpdateTender(ctx context.Context, tenderId string, params m
 	)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Tender{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", err.Error())
@@ -243,7 +243,7 @@ func (r *TenderRepo) UpdateTenderStatus(ctx context.Context, status, tenderId st
 
 	if err != nil {
 		log.Debug("err: ", err)
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Tender{}, repoerrs.ErrNotFound
 		}
 		return entity.Tender{}, fmt.Errorf("%s: %v", fn, err)
@@ -275,7 +275,7 @@ func (r *TenderRepo) GetTenderById(ctx context.Context, tenderId string) (entity
 	)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Tender{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", fn, err)
@@ -304,7 +304,7 @@ func (r *TenderRepo) RollbackTenderVersion(ctx context.Context, tenderId string,
 		&vc.OrganizationId,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Tender{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", fn, err)
@@ -333,7 +333,7 @@ func (r *TenderRepo) RollbackTenderVersion(ctx context.Context, tenderId string,
 	)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Tender{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", fn, err)

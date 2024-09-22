@@ -61,7 +61,7 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByOrganizationId(ctx c
 	responsibles, err := r.GetAllResponsiblesByUserId(ctx, userId)
 
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
+		if errors.Is(err, repoerrs.ErrNotFound) {
 			return false, err
 		}
 		return false, fmt.Errorf("%s: %v", fn, err)
@@ -97,7 +97,7 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByTenderId(ctx context
 	err := r.Pool.QueryRow(ctx, sql, tenderId, userId).Scan(&id)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return false, repoerrs.ErrNotFound
 		}
 		return false, fmt.Errorf("%s: %v", fn, err)
@@ -119,7 +119,7 @@ func (r *ResponsibleRepo) IsUserResponsibleForOrganizationByBidId(ctx context.Co
 	var tId string
 	err := r.Pool.QueryRow(ctx, sql, userId, bidId).Scan(&tId)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return false, repoerrs.ErrNotFound
 		}
 		return false, fmt.Errorf("%s: %v", fn, err)

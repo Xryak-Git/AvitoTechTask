@@ -186,7 +186,7 @@ func (r *BidRepo) UpdateBidStatus(ctx context.Context, status string, bidId stri
 	)
 	if err != nil {
 		log.Debug("err: ", err)
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Bid{}, repoerrs.ErrNotFound
 		}
 		return entity.Bid{}, fmt.Errorf("%s: %v", fn, err)
@@ -222,7 +222,7 @@ func (r *BidRepo) EditBid(ctx context.Context, bidId string, params map[string]i
 	)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Bid{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", err.Error())
@@ -289,7 +289,7 @@ func (r *BidRepo) GetBid(ctx context.Context, id string) (entity.Bid, error) {
 	)
 	if err != nil {
 		log.Debug("err: ", err)
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Bid{}, repoerrs.ErrNotFound
 		}
 		return entity.Bid{}, fmt.Errorf("%s: %v", fn, err)
@@ -316,7 +316,7 @@ func (r *BidRepo) RollbackBidVersion(ctx context.Context, bidId string, version 
 		&vb.AuthorId,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Bid{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", fn, err)
@@ -344,7 +344,7 @@ func (r *BidRepo) RollbackBidVersion(ctx context.Context, bidId string, version 
 	)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return entity.Bid{}, repoerrs.ErrNotFound
 		}
 		log.Debug("err: ", fn, err)
