@@ -31,12 +31,12 @@ func (bs *BidService) CreateBid(params CreateBidInput) (entity.Bid, error) {
 		return entity.Bid{}, err
 	}
 
-	err = IsUserResponsibleByTenderId(bs.responsibleRepo, user.Id, params.TenderId)
+	err = IsTenderExists(bs.tenderRepo, params.TenderId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
 
-	err = IsTenderExists(bs.tenderRepo, params.TenderId)
+	err = IsUserResponsibleByTenderId(bs.responsibleRepo, user.Id, params.TenderId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
@@ -59,12 +59,12 @@ func (bs *BidService) GetBidsForTender(params GetBidsForTenderParams, tenderId s
 		return []entity.Bid{}, err
 	}
 
-	err = IsUserResponsibleByTenderId(bs.responsibleRepo, user.Id, tenderId)
+	err = IsTenderExists(bs.tenderRepo, tenderId)
 	if err != nil {
 		return []entity.Bid{}, err
 	}
 
-	err = IsTenderExists(bs.tenderRepo, tenderId)
+	err = IsUserResponsibleByTenderId(bs.responsibleRepo, user.Id, tenderId)
 	if err != nil {
 		return []entity.Bid{}, err
 	}
@@ -86,12 +86,12 @@ func (bs *BidService) GetBidStatus(params UserParam, bidId string) (string, erro
 		return "", err
 	}
 
-	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
+	err = IsBidExists(bs.bidRepo, bidId)
 	if err != nil {
 		return "", err
 	}
 
-	err = IsBidExists(bs.bidRepo, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
 		return "", err
 	}
@@ -105,12 +105,12 @@ func (bs *BidService) UpdateBidStatus(params UpdateBidStatusParams, bidId string
 		return entity.Bid{}, err
 	}
 
-	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
+	err = IsBidExists(bs.bidRepo, bidId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
 
-	err = IsBidExists(bs.bidRepo, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
@@ -124,12 +124,12 @@ func (bs *BidService) EditBid(params UserParam, bidId string, editFields map[str
 		return entity.Bid{}, err
 	}
 
-	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
+	err = IsBidExists(bs.bidRepo, bidId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
 
-	err = IsBidExists(bs.bidRepo, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
@@ -144,12 +144,12 @@ func (bs *BidService) SubmitBidFeedback(params SubmitBidFeedbackParams, bidId st
 		return entity.Bid{}, err
 	}
 
-	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
+	err = IsBidExists(bs.bidRepo, bidId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
 
-	err = IsBidExists(bs.bidRepo, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
@@ -169,12 +169,12 @@ func (bs *BidService) RollbackBid(params UserParam, bidId string, version int) (
 		return entity.Bid{}, err
 	}
 
-	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
+	err = IsBidExists(bs.bidRepo, bidId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
 
-	err = IsBidExists(bs.bidRepo, bidId)
+	err = IsUserResponsibleByBidId(bs.responsibleRepo, user.Id, bidId)
 	if err != nil {
 		return entity.Bid{}, err
 	}
@@ -196,12 +196,12 @@ func (bs *BidService) GetBidReviews(params GetBidReviewsParams, tenderId string)
 		return []entity.BidReview{}, err
 	}
 
-	err = IsUserResponsibleByTenderId(bs.responsibleRepo, responsible.Id, tenderId)
+	err = IsTenderExists(bs.tenderRepo, tenderId)
 	if err != nil {
 		return []entity.BidReview{}, err
 	}
 
-	err = IsTenderExists(bs.tenderRepo, tenderId)
+	err = IsUserResponsibleByTenderId(bs.responsibleRepo, responsible.Id, tenderId)
 	if err != nil {
 		return []entity.BidReview{}, err
 	}
