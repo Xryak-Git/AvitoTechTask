@@ -11,7 +11,7 @@ import (
 func GetUserById(userRepo repo.User, id string) (entity.User, error) {
 	user, err := userRepo.GetById(context.Background(), id)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
+		if errors.Is(err, repoerrs.ErrNotFound) {
 			return entity.User{}, ErrUserNotExists
 		}
 		return entity.User{}, err
@@ -22,7 +22,7 @@ func GetUserById(userRepo repo.User, id string) (entity.User, error) {
 func GetUserByName(userRepo repo.User, name string) (entity.User, error) {
 	user, err := userRepo.GetByName(context.Background(), name)
 	if err != nil {
-		if err == repoerrs.ErrNotFound {
+		if errors.Is(err, repoerrs.ErrNotFound) {
 			return entity.User{}, ErrUserNotExists
 		}
 		return entity.User{}, err
@@ -92,13 +92,13 @@ func IsBidExists(bidRepo repo.Bid, bidId string) error {
 	exists, err := bidRepo.IsBidExists(context.Background(), bidId)
 	if err != nil {
 		if errors.Is(err, repoerrs.ErrNotFound) {
-			return ErrTendersNotFound
+			return ErrBidNotFound
 		}
 		return err
 	}
 
 	if !exists {
-		return ErrTendersNotFound
+		return ErrBidNotFound
 	}
 	return nil
 }
