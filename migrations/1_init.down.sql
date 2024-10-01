@@ -34,5 +34,5 @@ drop type if exists tender_status cascade;
 
 drop type if exists bid_status cascade;
 
-drop type if exists authore_type cascade;
+drop type if exists author_type cascade;
 
