@@ -55,8 +55,8 @@ func SendJSONResponse(w http.ResponseWriter, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func HandelServiceError(w http.ResponseWriter, exptectedErrList map[error]int, err error) {
-	if val, ok := exptectedErrList[err]; ok {
+func HandelServiceError(w http.ResponseWriter, err error) {
+	if val, ok := ExpectedErrors[err]; ok {
 		ErrorResponse(w, err.Error(), val)
 	} else {
 		ErrorResponse(w, "interanl server error", http.StatusInternalServerError)

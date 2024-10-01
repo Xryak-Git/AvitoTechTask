@@ -8,7 +8,7 @@ import (
 )
 
 type Tender interface {
-	CreateTender(ctx context.Context, name, description, serviceType, status, organizationId string) (entity.Tender, error)
+	CreateTender(ctx context.Context, name, description, serviceType, organizationId string) (entity.Tender, error)
 	GetTenders(ctx context.Context, limit, offset int, serviceType []string) ([]entity.Tender, error)
 	GetUserTenders(ctx context.Context, username string, limit int, offset int) ([]entity.Tender, error)
 	GetTenderStatus(ctx context.Context, tenderId string) (string, error)

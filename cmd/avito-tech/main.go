@@ -20,9 +20,10 @@ func main() {
 
 	log.Info("config loaded", "log level", cfg.LogLevel)
 
+	log.Info("starting storage")
 	storage, err := postgres.New(cfg.Postgres.Url)
 	if err != nil {
-		log.Error("cannot init storage", err)
+		log.Error("cannot init storage", "err", err)
 		os.Exit(1)
 	}
 

@@ -44,7 +44,7 @@ func (tc *TenderController) CreateTender(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		log.Debug("CreateTender err: ", err.Error())
-		HandelServiceError(w, tc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (tc *TenderController) GetTenders(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Debug("GetTenders err: ", err.Error())
-		HandelServiceError(w, tc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -83,7 +83,7 @@ func (tc *TenderController) GetUserTenders(w http.ResponseWriter, r *http.Reques
 
 	if err != nil {
 		log.Debug("GetUserTenders err: " + err.Error())
-		HandelServiceError(w, tc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -104,7 +104,7 @@ func (tc *TenderController) GetTenderStatus(w http.ResponseWriter, r *http.Reque
 
 	if err != nil {
 		log.Debug("GetTenderStatus err: ", err.Error())
-		HandelServiceError(w, tc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -152,7 +152,7 @@ func (tc *TenderController) EditTender(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Debug("EditTender err: ", err.Error())
-		HandelServiceError(w, tc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (tc *TenderController) RollbackTender(w http.ResponseWriter, r *http.Reques
 
 	if err != nil {
 		log.Debug("RollbackTender err: ", err.Error())
-		HandelServiceError(w, tc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -201,7 +201,7 @@ func (tc *TenderController) UpdateTenderStatus(w http.ResponseWriter, r *http.Re
 
 	if err != nil {
 		log.Debug("UpdateTenderStatus err: ", err.Error())
-		HandelServiceError(w, tc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 

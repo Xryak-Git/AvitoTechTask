@@ -12,24 +12,13 @@ import (
 )
 
 type BidController struct {
-	bidService     service.Bid
-	expectedErrors map[error]int
+	bidService service.Bid
 }
 
 func NewBidController(bidService service.Bid) BidController {
-	expectedErrors := map[error]int{
-		service.ErrUserNotExists:               http.StatusUnauthorized,
-		service.ErrUserIsNotResposible:         http.StatusForbidden,
-		service.ErrUserDoseNotMadeBidForTender: http.StatusForbidden,
-		service.ErrBidNotFound:                 http.StatusNotFound,
-		service.ErrBidReviewsNotFound:          http.StatusNotFound,
-		service.ErrBidOrVersionNotFound:        http.StatusNotFound,
-		service.ErrTenderNotFound:              http.StatusNotFound,
-	}
 
 	return BidController{
-		bidService:     bidService,
-		expectedErrors: expectedErrors,
+		bidService: bidService,
 	}
 }
 
@@ -45,7 +34,7 @@ func (bc *BidController) CreateBid(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Debug("CreateBid err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -63,7 +52,7 @@ func (bc *BidController) GetUserBids(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Debug("GetUserBids err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -81,7 +70,7 @@ func (bc *BidController) GetBidsForTender(w http.ResponseWriter, r *http.Request
 	bids, err := bc.bidService.GetBidsForTender(*bftp, tenderId)
 	if err != nil {
 		log.Debug("GetBidsForTender err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -99,7 +88,7 @@ func (bc *BidController) GetBidStatus(w http.ResponseWriter, r *http.Request) {
 	status, err := bc.bidService.GetBidStatus(*u, bidId)
 	if err != nil {
 		log.Debug("GetBidStatus err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -117,7 +106,7 @@ func (bc *BidController) UpdateBidStatus(w http.ResponseWriter, r *http.Request)
 	bid, err := bc.bidService.UpdateBidStatus(*bs, bidId)
 	if err != nil {
 		log.Debug("UpdateBidStatus err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -164,7 +153,7 @@ func (bc *BidController) EditBid(w http.ResponseWriter, r *http.Request) {
 	bid, err := bc.bidService.EditBid(*u, bidId, params)
 	if err != nil {
 		log.Debug("EditBid err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -183,7 +172,7 @@ func (bc *BidController) SubmitBidFeedback(w http.ResponseWriter, r *http.Reques
 	bid, err := bc.bidService.SubmitBidFeedback(*bf, bidId)
 	if err != nil {
 		log.Debug("SubmitBidDecision err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -208,7 +197,7 @@ func (bc *BidController) RollbackBid(w http.ResponseWriter, r *http.Request) {
 	bid, err := bc.bidService.RollbackBid(*u, bidId, versionInt)
 	if err != nil {
 		log.Debug("RollbackBid err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -227,7 +216,7 @@ func (bc *BidController) GetBidReviews(w http.ResponseWriter, r *http.Request) {
 	reviews, err := bc.bidService.GetBidReviews(*params, tenderId)
 	if err != nil {
 		log.Debug("RollbackBid err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 
@@ -246,7 +235,7 @@ func (bc *BidController) SubmitBidDecision(w http.ResponseWriter, r *http.Reques
 
 	if err != nil {
 		log.Debug("SubmitBidDecision err: ", err.Error())
-		HandelServiceError(w, bc.expectedErrors, err)
+		HandelServiceError(w, err)
 		return
 	}
 

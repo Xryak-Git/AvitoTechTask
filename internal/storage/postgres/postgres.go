@@ -48,7 +48,6 @@ func New(url string, opts ...Option) (*Postgres, error) {
 	for _, opt := range opts {
 		opt(pg)
 	}
-
 	poolConfig, err := pgxpool.ParseConfig(url)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", fn, err)

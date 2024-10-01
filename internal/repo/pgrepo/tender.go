@@ -20,17 +20,17 @@ func NewTenderRepo(pg *postgres.Postgres) *TenderRepo {
 	return &TenderRepo{pg}
 }
 
-func (r *TenderRepo) CreateTender(ctx context.Context, name, description, serviceType, status, organizationId string) (entity.Tender, error) {
+func (r *TenderRepo) CreateTender(ctx context.Context, name, description, serviceType, organizationId string) (entity.Tender, error) {
 	const fn = "repo.pgrepo.tender.CreateTender"
 
 	sql := `
-	INSERT INTO tender (name, description, service_type, status, organization_id)
-	VALUES ($1, $2, UPPER($3)::service_type, UPPER($4)::tender_status, $5) 
+	INSERT INTO tender (name, description, service_type, organization_id)
+	VALUES ($1, $2, UPPER($3)::service_type, $4) 
 	RETURNING id, name, description, INITCAP(service_type::text) AS service_type, INITCAP(status::text) AS status, organization_id, version, created_at
 	`
 
 	var t entity.Tender
-	err := r.Pool.QueryRow(ctx, sql, name, description, serviceType, status, organizationId).Scan(
+	err := r.Pool.QueryRow(ctx, sql, name, description, serviceType, organizationId).Scan(
 		&t.Id,
 		&t.Name,
 		&t.Description,

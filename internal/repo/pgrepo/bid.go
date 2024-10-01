@@ -248,6 +248,7 @@ func (r *BidRepo) CreateBidFeedback(ctx context.Context, feedback string, bidId 
 		&reviewId,
 	)
 	if err != nil {
+		log.Debug("err: ", fn, " ", err)
 		return repoerrs.ErrUnableToInsert
 	}
 

@@ -34,7 +34,7 @@ func (ts *TenderService) CreateTender(params CreateTenderInput) (entity.Tender, 
 		return entity.Tender{}, err
 	}
 
-	return ts.tenderRepo.CreateTender(context.Background(), params.Name, params.Description, params.ServiceType, params.Status, params.OrganizationId)
+	return ts.tenderRepo.CreateTender(context.Background(), params.Name, params.Description, params.ServiceType, params.OrganizationId)
 }
 
 func (ts *TenderService) GetTenders(params GetTendersParams) ([]entity.Tender, error) {

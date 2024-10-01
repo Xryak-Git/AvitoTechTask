@@ -91,13 +91,13 @@ func IsTenderExists(tenderRepo repo.Tender, tenderId string) error {
 	exists, err := tenderRepo.IsTenderExists(context.Background(), tenderId)
 	if err != nil {
 		if errors.Is(err, repoerrs.ErrNotFound) {
-			return ErrTendersNotFound
+			return ErrTenderNotFound
 		}
 		return err
 	}
 
 	if !exists {
-		return ErrTendersNotFound
+		return ErrTenderNotFound
 	}
 	return nil
 }

@@ -8,8 +8,7 @@ import (
 type CreateTenderInput struct {
 	Name            string `json:"name" validate:"required,min=3"`
 	Description     string `json:"description" validate:"required"`
-	ServiceType     string `json:"serviceType" validate:"required"`
-	Status          string `json:"status" validate:"required"`
+	ServiceType     string `json:"serviceType" validate:"required"` // TODO: можно добавить ,oneof= но не хотелось дублировать из базы - если поменяется там, то надо менять и здесь
 	OrganizationId  string `json:"organizationId" validate:"required"`
 	CreatorUsername string `json:"creatorUsername" validate:"required"`
 }
@@ -34,7 +33,7 @@ type UserParam struct {
 
 type GetTendersParams struct {
 	GetParams
-	ServiceType []string `schema:"service_type" validate:"required,dive,alpha"`
+	ServiceType []string `schema:"service_type" validate:"omitempty,dive,required,alpha"` // TODO: можно добавить ,oneof=Manufacture Construction но не хотелось дублировать из базы - если поменяется там, то надо менять и здесь
 }
 
 type GetUserTendersParams struct {
